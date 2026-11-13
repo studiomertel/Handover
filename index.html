@@ -41,6 +41,8 @@ textarea{min-height:96px;resize:vertical}
 .chip{border-radius:5px;padding:1px 8px;font-size:.8rem;background:#1B2A41;color:#B7BFBC}
 .s1{background:#A8A594;color:#1B2A41}.s2{background:var(--c2);color:var(--c2t)}
 .imp{font-size:.78rem;border:1px solid var(--ink);border-radius:5px;padding:0 6px;height:fit-content}
+.mv{display:flex;gap:6px;margin-left:auto}
+.mv button{font:inherit;width:44px;height:36px;border:1px solid var(--line);border-radius:7px;background:transparent;color:inherit;cursor:pointer}
 .empty,#cnt,#bk{color:var(--mute);font-size:.9rem}
 .r{animation:rise .45s both;animation-delay:calc(var(--i,0)*60ms)}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -77,10 +79,13 @@ dialog .btns{margin-top:14px}
 <div class="meta r" style="--i:1">
 <label class="f">Abwesenheit<input id="zt" placeholder="02.11. – 13.11.2026"></label>
 <label class="f">Vertretung<input id="vt" placeholder="Name"></label>
+<label class="f" style="grid-column:1/-1">Einrichtung<input id="ei" placeholder="Name der Einrichtung"></label>
+<label class="f" style="grid-column:1/-1">Kontakte (Objekt, Einrichtung, weitere Personen)<textarea id="ko" placeholder="z. B. Hausmeister Herr Müller, 0123 456789"></textarea></label>
 </div>
 <div class="tools r" style="--i:2">
-<label class="tg"><input type="checkbox" id="fo"><span class="sw"></span>Für Max (ohne Erledigte)</label>
+<label class="tg"><input type="checkbox" id="fo"><span class="sw"></span>Für den Chef (ohne Erledigte)</label>
 <label class="tg"><input type="checkbox" id="fw"><span class="sw"></span>Nur Wichtige</label>
+<label class="f" style="margin:0">Sortierung<select id="so"><option value="st">Nach Status (Standard)</option><option value="alt">Chronologisch, älteste zuerst</option><option value="neu">Chronologisch, neueste zuerst</option><option value="man">Manuell (mit Pfeilen verschieben)</option></select></label>
 </div>
 <div id="list"></div>
 <p id="cnt"></p>
@@ -100,6 +105,7 @@ dialog .btns{margin-top:14px}
 <label class="f">Kurztitel<input id="ti" placeholder="z. B. Techniker nicht erschienen"></label>
 <label class="f">Status<select id="st"><option>Offen</option><option>In Klärung</option><option>Erledigt</option></select></label>
 <label class="tg" style="margin-bottom:10px"><input type="checkbox" id="wi"><span class="sw"></span>Wichtig</label>
+<label class="f">Kontakt zu diesem Eintrag (optional)<input id="kt" placeholder="z. B. Firma XY, Herr Beispiel, 0123 456789"></label>
 <label class="f">Details (später nachtragbar)<textarea id="de"></textarea></label>
 <div class="btns">
 <button class="btn p" id="ok">Speichern</button>
@@ -111,7 +117,7 @@ dialog .btns{margin-top:14px}
 <input type="file" id="imp" accept=".json,application/json" hidden>
 <script>
 const K="rueckkehr-v1",$=s=>document.querySelector(s),ST=["Offen","In Klärung","Erledigt"];
-let S={meta:{zt:"",vt:"",bk:""},items:[]},cur=null;
+let S={meta:{zt:"",vt:"",ei:"",ko:"",so:"st",bk:""},items:[]},cur=null;
 try{const r=JSON.parse(localStorage.getItem(K));if(r&&Array.isArray(r.items))S={meta:Object.assign(S.meta,r.meta),items:r.items}}catch(e){}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 try{navigator.serviceWorker&&navigator.serviceWorker.register("sw.js")}catch(e){}
@@ -119,34 +125,40 @@ const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){alert("Sp
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fd=d=>d?d.split("-").reverse().join("."):"";
 const today=()=>{const t=new Date();return new Date(t-t.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
-const rank=(a,b)=>ST.indexOf(a.status)-ST.indexOf(b.status)||(b.wichtig?1:0)-(a.wichtig?1:0)||b.datum.localeCompare(a.datum);
+const rank0=(a,b)=>ST.indexOf(a.status)-ST.indexOf(b.status)||(b.wichtig?1:0)-(a.wichtig?1:0)||b.datum.localeCompare(a.datum);
+const rank=(a,b)=>S.meta.so==="man"?0:S.meta.so==="alt"?a.datum.localeCompare(b.datum):S.meta.so==="neu"?b.datum.localeCompare(a.datum):rank0(a,b);
+let VIS=[];
+function mv(id,d){const k=VIS.findIndex(x=>x.id===id),nb=VIS[k+d];if(!nb)return;const a=S.items.indexOf(VIS[k]),b=S.items.indexOf(nb);[S.items[a],S.items[b]]=[S.items[b],S.items[a]];save();render()}
 function render(){
 const v=S.items.filter(i=>!($("#fo").checked&&i.status==="Erledigt")&&!($("#fw").checked&&!i.wichtig)).sort(rank);
-$("#list").innerHTML=v.length?v.map((i,n)=>`<div class="row r" data-id="${i.id}" style="--i:${Math.min(n,8)}"><div class="top"><b>${esc(i.titel)}</b>${i.wichtig?'<span class="imp">Wichtig</span>':""}</div><div class="sub"><span class="chip s${ST.indexOf(i.status)}">${i.status}</span><span>${fd(i.datum)}</span></div>${i.details?`<p>${esc(i.details)}</p>`:""}</div>`).join(""):`<p class="empty">Noch keine Einträge. Tippe auf „Neuer Eintrag“.</p>`;
-$("#cnt").textContent=`${v.length} von ${S.items.length} Einträgen`;
+const man=S.meta.so==="man";$("#list").innerHTML=v.length?v.map((i,n)=>`<div class="row r" data-id="${i.id}" style="--i:${Math.min(n,8)}"><div class="top"><b>${esc(i.titel)}</b>${i.wichtig?'<span class="imp">Wichtig</span>':""}${man?`<span class="mv"><button data-mv="${i.id}" data-d="-1" aria-label="nach oben">▲</button><button data-mv="${i.id}" data-d="1" aria-label="nach unten">▼</button></span>`:""}</div><div class="sub"><span class="chip s${ST.indexOf(i.status)}">${i.status}</span><span>${fd(i.datum)}</span></div>${i.details?`<p>${esc(i.details)}</p>`:""}${i.kontakt?`<p>Kontakt: ${esc(i.kontakt)}</p>`:""}</div>`).join(""):`<p class="empty">Noch keine Einträge. Tippe auf „Neuer Eintrag“.</p>`;
+VIS=v;$("#cnt").textContent=`${v.length} von ${S.items.length} Einträgen`;
 const b=S.meta.bk;$("#bk").textContent=b?`Letztes Backup: ${fd(b)}${(Date.now()-new Date(b))/864e5>7?" (älter als 7 Tage, bitte erneuern)":""}`:"Noch kein Backup gespeichert. Bitte regelmäßig sichern.";
 }
 function openD(id){cur=id;const i=S.items.find(x=>x.id===id)||{datum:today(),titel:"",status:"Offen",wichtig:false,details:""};
-$("#da").value=i.datum;$("#ti").value=i.titel;$("#st").value=i.status;$("#wi").checked=!!i.wichtig;$("#de").value=i.details||"";$("#del").hidden=!id;$("#dlg").showModal()}
+$("#da").value=i.datum;$("#ti").value=i.titel;$("#st").value=i.status;$("#wi").checked=!!i.wichtig;$("#de").value=i.details||"";$("#kt").value=i.kontakt||"";$("#del").hidden=!id;$("#dlg").showModal()}
 $("#add").onclick=()=>openD(null);
-$("#list").onclick=e=>{const r=e.target.closest(".row");if(r)openD(r.dataset.id)};
+$("#list").onclick=e=>{const m=e.target.closest("[data-mv]");if(m){mv(m.dataset.mv,+m.dataset.d);return}const r=e.target.closest(".row");if(r)openD(r.dataset.id)};
 $("#no").onclick=()=>$("#dlg").close();
 $("#ok").onclick=()=>{const t=$("#ti").value.trim();if(!t){$("#ti").focus();return}
-const o={datum:$("#da").value||today(),titel:t,status:$("#st").value,wichtig:$("#wi").checked,details:$("#de").value.trim()};
+const o={datum:$("#da").value||today(),titel:t,status:$("#st").value,wichtig:$("#wi").checked,details:$("#de").value.trim(),kontakt:$("#kt").value.trim()};
 if(cur)Object.assign(S.items.find(x=>x.id===cur),o);else S.items.push(Object.assign({id:Date.now().toString(36)},o));
 save();render();$("#dlg").close()};
 $("#del").onclick=()=>{if(confirm("Eintrag löschen?")){S.items=S.items.filter(x=>x.id!==cur);save();render();$("#dlg").close()}};
 $("#fo").onchange=$("#fw").onchange=render;
 $("#zt").oninput=e=>{S.meta.zt=e.target.value;save()};
 $("#vt").oninput=e=>{S.meta.vt=e.target.value;save()};
-$("#zt").value=S.meta.zt;$("#vt").value=S.meta.vt;
+$("#ei").oninput=e=>{S.meta.ei=e.target.value;save()};
+$("#ko").oninput=e=>{S.meta.ko=e.target.value;save()};
+$("#so").onchange=e=>{S.meta.so=e.target.value;save();render()};
+const fill=()=>{$("#zt").value=S.meta.zt;$("#vt").value=S.meta.vt;$("#ei").value=S.meta.ei;$("#ko").value=S.meta.ko;$("#so").value=S.meta.so};fill();
 function rep(){
 const act=S.items.filter(i=>i.status!=="Erledigt").sort(rank),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=S.items.filter(i=>i.status==="Erledigt").sort(rank);
-const sec=(t,a)=>a.length?`<h2>${t}</h2>`+a.map((i,n)=>`<article style="--i:${n}"><h3>${esc(i.titel)}</h3><p class="m"><span>${fd(i.datum)}</span><span class="c">${i.status}</span></p>${i.details?`<p>${esc(i.details)}</p>`:""}</article>`).join(""):"";
-const md=(t,a)=>a.length?`\n## ${t}\n`+a.map(i=>`- **${i.titel}** (${fd(i.datum)}, ${i.status})${i.details?": "+i.details.replace(/\n/g," "):""}`).join("\n")+"\n":"";
-const head=[S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean);
-return{html:`<h1>Rückkehr-Übersicht</h1><p class="m">${head.map(esc).join(" | ")}</p>`+(S.items.length?sec("Das Wichtigste",imp)+sec("Offen und in Klärung",rest)+sec("Erledigt",done):"<p>Keine Einträge.</p>"),
-md:`# Rückkehr-Übersicht\n\n${head.join("  \n")}\n`+md("Das Wichtigste",imp)+md("Offen und in Klärung",rest)+md("Erledigt",done)}}
+const sec=(t,a)=>a.length?`<h2>${t}</h2>`+a.map((i,n)=>`<article style="--i:${n}"><h3>${esc(i.titel)}</h3><p class="m"><span>${fd(i.datum)}</span><span class="c">${i.status}</span></p>${i.details?`<p>${esc(i.details)}</p>`:""}${i.kontakt?`<p>Kontakt: ${esc(i.kontakt)}</p>`:""}</article>`).join(""):"";
+const md=(t,a)=>a.length?`\n## ${t}\n`+a.map(i=>`- **${i.titel}** (${fd(i.datum)}, ${i.status})${i.details?": "+i.details.replace(/\n/g," "):""}${i.kontakt?" (Kontakt: "+i.kontakt+")":""}`).join("\n")+"\n":"";
+const head=[S.meta.ei&&"Einrichtung: "+S.meta.ei,S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean);
+return{html:`<h1>Rückkehr-Übersicht</h1><p class="m">${head.map(esc).join(" | ")}</p>`+(S.meta.ko?`<h2>Kontakte</h2><article style="--i:0"><p>${esc(S.meta.ko)}</p></article>`:"")+(S.items.length?sec("Das Wichtigste",imp)+sec("Offen und in Klärung",rest)+sec("Erledigt",done):"<p>Keine Einträge.</p>"),
+md:`# Rückkehr-Übersicht\n\n${head.join("  \n")}\n`+(S.meta.ko?`\n## Kontakte\n${S.meta.ko}\n`:"")+md("Das Wichtigste",imp)+md("Offen und in Klärung",rest)+md("Erledigt",done)}}
 async function out(name,txt,type){const f=new File([txt],name,{type});
 try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==="AbortError")return}
 const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
@@ -161,9 +173,9 @@ const wrap=(t,sz)=>{const n=Math.floor(CW/(sz*.55)),o=[];String(t).split("\n").f
 const ln=(t,sz,b,gap,col)=>{wrap(t,sz).forEach(x=>{if(y-sz<M)nl();cu.push(`BT /F${b?2:1} ${sz} Tf ${col||"0.106 0.165 0.255"} rg ${M} ${y-sz} Td (${pe(x)}) Tj ET`);y-=sz*1.25});y-=gap};
 const act=S.items.filter(i=>i.status!=="Erledigt").sort(rank),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=S.items.filter(i=>i.status==="Erledigt").sort(rank);
 ln("Rückkehr-Übersicht",20,1,4);
-[S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean).forEach(t=>ln(t,11,0,0,"0.2 0.2 0.18"));
-y-=10;
-const sec=(t,a)=>{if(!a.length)return;ln(t,14,1,6);a.forEach(i=>{ln(i.titel,12,1,1);ln(`${fd(i.datum)}  |  ${i.status}${i.wichtig?"  |  Wichtig":""}`,10,0,2,"0.2 0.2 0.18");if(i.details)ln(i.details,11,0,0);y-=10});y-=4};
+[S.meta.ei&&"Einrichtung: "+S.meta.ei,S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean).forEach(t=>ln(t,11,0,0,"0.2 0.2 0.18"));
+y-=10;if(S.meta.ko){ln("Kontakte",14,1,6);ln(S.meta.ko,11,0,0);y-=14}
+const sec=(t,a)=>{if(!a.length)return;ln(t,14,1,6);a.forEach(i=>{ln(i.titel,12,1,1);ln(`${fd(i.datum)}  |  ${i.status}${i.wichtig?"  |  Wichtig":""}`,10,0,2,"0.2 0.2 0.18");if(i.details)ln(i.details,11,0,0);if(i.kontakt)ln("Kontakt: "+i.kontakt,10,0,0,"0.2 0.2 0.18");y-=10});y-=4};
 if(S.items.length){sec("Das Wichtigste",imp);sec("Offen und in Klärung",rest);sec("Erledigt",done)}else ln("Keine Einträge.",11,0,0);
 nl();
 const N=4+pg.length*2,ob=[];
@@ -185,7 +197,7 @@ $("#bl").onclick=()=>$("#imp").click();
 $("#imp").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
 try{const j=JSON.parse(await f.text());if(!Array.isArray(j.items))throw 0;
 if(!confirm(`Aktuelle Liste durch das Backup ersetzen (${j.items.length} Einträge)?`))return;
-S={meta:Object.assign({zt:"",vt:"",bk:""},j.meta),items:j.items};save();$("#zt").value=S.meta.zt;$("#vt").value=S.meta.vt;render()}catch(x){alert("Diese Datei ist kein gültiges Backup.")}};
+S={meta:Object.assign({zt:"",vt:"",ei:"",ko:"",so:"st",bk:""},j.meta),items:j.items};save();fill();render()}catch(x){alert("Diese Datei ist kein gültiges Backup.")}};
 render();
 </script>
 </body>
