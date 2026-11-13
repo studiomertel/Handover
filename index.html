@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Übersicht">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1B2A41">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACj0lEQVR4nO3cwU0cQRBAUbCcBRmQgw/k4psjQD5bROCbs3FiTmD/ane2RzVj3rvDtrq/hkHQ9fzy+vYEl3yZXgDHJQ6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImD9HV6AU9/fv+cXsJxff/xa/DTh58cyrhudn8m41DGLQZ3aSwOZdxuaq+8kJLEQRIHSRwkcZDEQRIHSRwkcZDEQRqLY/bvjecytVeTTw593GJwl4Z/rOjjutn9eX55fRv8eI7MCylJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBMtnn0Ez2IZnswzUm+3CNyT4cjjhI4iCJgyQOkjhI4iCJgyQOkjhIJvucgMk+XGayD5eZ7MNBeSEliYMkDpI4SOIgiYMkDpI4SOIgiYM0f1f2P/b+/u2RL//4+LtqJdt4cuzlwTKWfIcHiWMXq851tg9xrLf2RAf7EMdie5zlVB/iIM3/tnK6WQyf57/XTPa52xnXvI3JPlucd+V3Mdlno7Ov/xZeSEniIImDJA6SOEjiIImDJA6SOEjiIJnss9HZ138Lk322OO/K72Kyz93OuOZt5v/Z5/Ps9el4ISWJY7E9biJN3W4Sx3prz3Lw3ps4drHqRGdvRIpjL4+f6/hdWXNISZ4cJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQ/gGOll7bWz3abwAAAABJRU5ErkJggg==">
+<title>Rückkehr-Übersicht</title>
+<style>
+:root{--bg:#B7BFBC;--ink:#1B2A41;--mute:#33342E;--line:#47607A;--acc:#3A431F;--acc-ink:#B7BFBC;--c2:#3A431F;--c2t:#B7BFBC;
+color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#33342E;--ink:#B7BFBC;--mute:#A8ACA6;--line:#93958A;--acc:#94A37E;--acc-ink:#1B2A41;--c2:#94A37E;--c2t:#1B2A41;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#33342E;--ink:#B7BFBC;--mute:#A8ACA6;--line:#93958A;--acc:#94A37E;--acc-ink:#1B2A41;--c2:#94A37E;--c2t:#1B2A41;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 110px}
+h1{font-size:1.5rem;margin:0 0 14px;font-weight:650}
+label.f{display:block;font-size:.85rem;color:var(--mute);margin-bottom:10px}
+input,select,textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:7px;padding:9px 10px;margin-top:4px}
+textarea{min-height:96px;resize:vertical}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tools{display:flex;flex-direction:column;gap:10px;margin:6px 0 16px}
+.tg{display:flex;align-items:center;gap:10px;font-size:.92rem;cursor:pointer}
+.tg input{position:absolute;opacity:0;width:1px;height:1px}
+.sw{flex:none;width:44px;height:24px;border:1px solid var(--line);border-radius:7px;position:relative;transition:background .2s}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:5px;background:var(--ink);transition:transform .2s}
+.tg input:checked+.sw{background:var(--acc)}
+.tg input:checked+.sw::after{transform:translateX(20px);background:var(--acc-ink)}
+.tg input:focus-visible+.sw,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.row{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:10px;cursor:pointer}
+.row:active{background:var(--acc);color:var(--acc-ink)}
+.row p{margin:6px 0 0;font-size:.92rem;color:var(--mute);white-space:pre-wrap}
+.row:active p{color:var(--acc-ink)}
+.top{display:flex;justify-content:space-between;gap:8px}
+.sub{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:.85rem;color:var(--mute)}
+.chip{border-radius:5px;padding:1px 8px;font-size:.8rem;background:#1B2A41;color:#B7BFBC}
+.s1{background:#A8A594;color:#1B2A41}.s2{background:var(--c2);color:var(--c2t)}
+.imp{font-size:.78rem;border:1px solid var(--ink);border-radius:5px;padding:0 6px;height:fit-content}
+.empty,#cnt,#bk{color:var(--mute);font-size:.9rem}
+.r{animation:rise .45s both;animation-delay:calc(var(--i,0)*60ms)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.r{animation:none}.sw,.sw::after{transition:none}}
+h2.k{font-size:1rem;margin:26px 0 10px}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{font:inherit;font-size:.92rem;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink);cursor:pointer}
+.btn.p{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));padding:14px 20px;font:inherit;font-weight:600;border:0;border-radius:10px;background:var(--acc);color:var(--acc-ink);box-shadow:0 2px 10px rgba(27,42,65,.35);cursor:pointer}
+dialog{width:min(94vw,520px);border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:18px}
+dialog::backdrop{background:rgba(27,42,65,.6)}
+dialog .btns{margin-top:14px}
+#rep{display:none}
+@media print{body>*:not(#rep){display:none!important}#rep{display:block!important}:root{padding:0}}
+</style>
+<style id="rpcss">
+.rp{background:#B7BFBC;color:#1B2A41;font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:28px 18px;min-height:100vh;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rp>*{max-width:720px;margin-left:auto;margin-right:auto}
+.rp h1{font-size:1.6rem;margin-top:0;margin-bottom:4px}
+.rp h2{font-size:1.1rem;margin-top:26px;margin-bottom:10px;color:#33342E}
+.rp .m{color:#33342E;margin-top:0;margin-bottom:6px;display:flex;gap:8px;flex-wrap:wrap}
+.rp article{border:1px solid #47607A;border-radius:8px;padding:12px 14px;margin-bottom:10px;animation:rpr .5s both;animation-delay:calc(var(--i)*80ms)}
+.rp h3{font-size:1rem;margin:0 0 4px}
+.rp article p{margin:4px 0 0;white-space:pre-wrap}
+.rp .c{background:#1B2A41;color:#B7BFBC;border-radius:5px;padding:0 7px;font-size:.8rem}
+@keyframes rpr{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media print{.rp{background:#fff;padding:0;min-height:0}.rp article{animation:none;break-inside:avoid}}
+@media (prefers-reduced-motion:reduce){.rp article{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1 class="r">Rückkehr-Übersicht</h1>
+<div class="meta r" style="--i:1">
+<label class="f">Abwesenheit<input id="zt" placeholder="02.11. – 13.11.2026"></label>
+<label class="f">Vertretung<input id="vt" placeholder="Name"></label>
+</div>
+<div class="tools r" style="--i:2">
+<label class="tg"><input type="checkbox" id="fo"><span class="sw"></span>Für den Chef (ohne Erledigte)</label>
+<label class="tg"><input type="checkbox" id="fw"><span class="sw"></span>Nur Wichtige</label>
+</div>
+<div id="list"></div>
+<p id="cnt"></p>
+<h2 class="k">Ausgabe und Backup</h2>
+<div class="btns">
+<button class="btn p" id="bh">Bericht als HTML</button>
+<button class="btn p" id="bp">Bericht als PDF</button>
+<button class="btn" id="bm">Als Markdown kopieren</button>
+<button class="btn" id="bb">Backup speichern</button>
+<button class="btn" id="bl">Backup laden</button>
+</div>
+<p id="bk"></p>
+</div>
+<button class="fab" id="add">+ Neuer Eintrag</button>
+<dialog id="dlg">
+<label class="f">Datum<input type="date" id="da"></label>
+<label class="f">Kurztitel<input id="ti" placeholder="z. B. Techniker nicht erschienen"></label>
+<label class="f">Status<select id="st"><option>Offen</option><option>In Klärung</option><option>Erledigt</option></select></label>
+<label class="tg" style="margin-bottom:10px"><input type="checkbox" id="wi"><span class="sw"></span>Wichtig</label>
+<label class="f">Details (später nachtragbar)<textarea id="de"></textarea></label>
+<div class="btns">
+<button class="btn p" id="ok">Speichern</button>
+<button class="btn" id="no">Abbrechen</button>
+<button class="btn" id="del" style="grid-column:1/-1">Eintrag löschen</button>
+</div>
+</dialog>
+<div id="rep"></div>
+<input type="file" id="imp" accept=".json,application/json" hidden>
+<script>
+const K="rueckkehr-v1",$=s=>document.querySelector(s),ST=["Offen","In Klärung","Erledigt"];
+let S={meta:{zt:"",vt:"",bk:""},items:[]},cur=null;
+try{const r=JSON.parse(localStorage.getItem(K));if(r&&Array.isArray(r.items))S={meta:Object.assign(S.meta,r.meta),items:r.items}}catch(e){}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+try{navigator.serviceWorker&&navigator.serviceWorker.register("sw.js")}catch(e){}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){alert("Speichern nicht möglich. Bitte sofort ein Backup sichern.")}};
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fd=d=>d?d.split("-").reverse().join("."):"";
+const today=()=>{const t=new Date();return new Date(t-t.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const rank=(a,b)=>ST.indexOf(a.status)-ST.indexOf(b.status)||(b.wichtig?1:0)-(a.wichtig?1:0)||b.datum.localeCompare(a.datum);
+function render(){
+const v=S.items.filter(i=>!($("#fo").checked&&i.status==="Erledigt")&&!($("#fw").checked&&!i.wichtig)).sort(rank);
+$("#list").innerHTML=v.length?v.map((i,n)=>`<div class="row r" data-id="${i.id}" style="--i:${Math.min(n,8)}"><div class="top"><b>${esc(i.titel)}</b>${i.wichtig?'<span class="imp">Wichtig</span>':""}</div><div class="sub"><span class="chip s${ST.indexOf(i.status)}">${i.status}</span><span>${fd(i.datum)}</span></div>${i.details?`<p>${esc(i.details)}</p>`:""}</div>`).join(""):`<p class="empty">Noch keine Einträge. Tippe auf „Neuer Eintrag“.</p>`;
+$("#cnt").textContent=`${v.length} von ${S.items.length} Einträgen`;
+const b=S.meta.bk;$("#bk").textContent=b?`Letztes Backup: ${fd(b)}${(Date.now()-new Date(b))/864e5>7?" (älter als 7 Tage, bitte erneuern)":""}`:"Noch kein Backup gespeichert. Bitte regelmäßig sichern.";
+}
+function openD(id){cur=id;const i=S.items.find(x=>x.id===id)||{datum:today(),titel:"",status:"Offen",wichtig:false,details:""};
+$("#da").value=i.datum;$("#ti").value=i.titel;$("#st").value=i.status;$("#wi").checked=!!i.wichtig;$("#de").value=i.details||"";$("#del").hidden=!id;$("#dlg").showModal()}
+$("#add").onclick=()=>openD(null);
+$("#list").onclick=e=>{const r=e.target.closest(".row");if(r)openD(r.dataset.id)};
+$("#no").onclick=()=>$("#dlg").close();
+$("#ok").onclick=()=>{const t=$("#ti").value.trim();if(!t){$("#ti").focus();return}
+const o={datum:$("#da").value||today(),titel:t,status:$("#st").value,wichtig:$("#wi").checked,details:$("#de").value.trim()};
+if(cur)Object.assign(S.items.find(x=>x.id===cur),o);else S.items.push(Object.assign({id:Date.now().toString(36)},o));
+save();render();$("#dlg").close()};
+$("#del").onclick=()=>{if(confirm("Eintrag löschen?")){S.items=S.items.filter(x=>x.id!==cur);save();render();$("#dlg").close()}};
+$("#fo").onchange=$("#fw").onchange=render;
+$("#zt").oninput=e=>{S.meta.zt=e.target.value;save()};
+$("#vt").oninput=e=>{S.meta.vt=e.target.value;save()};
+$("#zt").value=S.meta.zt;$("#vt").value=S.meta.vt;
+function rep(){
+const act=S.items.filter(i=>i.status!=="Erledigt").sort(rank),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=S.items.filter(i=>i.status==="Erledigt").sort(rank);
+const sec=(t,a)=>a.length?`<h2>${t}</h2>`+a.map((i,n)=>`<article style="--i:${n}"><h3>${esc(i.titel)}</h3><p class="m"><span>${fd(i.datum)}</span><span class="c">${i.status}</span></p>${i.details?`<p>${esc(i.details)}</p>`:""}</article>`).join(""):"";
+const md=(t,a)=>a.length?`\n## ${t}\n`+a.map(i=>`- **${i.titel}** (${fd(i.datum)}, ${i.status})${i.details?": "+i.details.replace(/\n/g," "):""}`).join("\n")+"\n":"";
+const head=[S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean);
+return{html:`<h1>Rückkehr-Übersicht</h1><p class="m">${head.map(esc).join(" | ")}</p>`+(S.items.length?sec("Das Wichtigste",imp)+sec("Offen und in Klärung",rest)+sec("Erledigt",done):"<p>Keine Einträge.</p>"),
+md:`# Rückkehr-Übersicht\n\n${head.join("  \n")}\n`+md("Das Wichtigste",imp)+md("Offen und in Klärung",rest)+md("Erledigt",done)}}
+async function out(name,txt,type){const f=new File([txt],name,{type});
+try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==="AbortError")return}
+const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+$("#bh").onclick=()=>out(`Rueckkehr-Uebersicht-${today()}.html`,`<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rückkehr-Übersicht</title><style>body{margin:0}${$("#rpcss").textContent}</style></head><body><div class="rp">${rep().html}</div></body></html>`,"text/html");
+$("#bp").onclick=()=>{$("#rep").innerHTML=`<div class="rp">${rep().html}</div>`;window.print()};
+$("#bm").onclick=async e=>{const t=rep().md,b=e.target;try{await navigator.clipboard.writeText(t)}catch(x){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(y){}a.remove()}
+b.textContent="Kopiert";setTimeout(()=>b.textContent="Als Markdown kopieren",1600)};
+$("#bb").onclick=async()=>{await out(`Rueckkehr-Backup-${today()}.json`,JSON.stringify(S,null,1),"application/json");S.meta.bk=today();save();render()};
+$("#bl").onclick=()=>$("#imp").click();
+$("#imp").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+try{const j=JSON.parse(await f.text());if(!Array.isArray(j.items))throw 0;
+if(!confirm(`Aktuelle Liste durch das Backup ersetzen (${j.items.length} Einträge)?`))return;
+S={meta:Object.assign({zt:"",vt:"",bk:""},j.meta),items:j.items};save();$("#zt").value=S.meta.zt;$("#vt").value=S.meta.vt;render()}catch(x){alert("Diese Datei ist kein gültiges Backup.")}};
+render();
+</script>
+</body>
+</html>
