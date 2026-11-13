@@ -151,7 +151,33 @@ async function out(name,txt,type){const f=new File([txt],name,{type});
 try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==="AbortError")return}
 const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
 $("#bh").onclick=()=>out(`Rueckkehr-Uebersicht-${today()}.html`,`<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rückkehr-Übersicht</title><style>body{margin:0}${$("#rpcss").textContent}</style></head><body><div class="rp">${rep().html}</div></body></html>`,"text/html");
-$("#bp").onclick=()=>{$("#rep").innerHTML=`<div class="rp">${rep().html}</div>`;window.print()};
+function pdf(){
+const W=595,H=842,M=56,CW=W-2*M,WM={"€":128,"„":132,"…":133,"‘":145,"’":146,"“":147,"”":148,"•":149,"–":150,"—":151};
+const enc=s=>[...String(s)].map(c=>{const k=c.charCodeAt(0);return WM[c]?String.fromCharCode(WM[c]):(k>=32&&k<256&&!(k>126&&k<160))?c:" "}).join("");
+const pe=s=>enc(s).replace(/[\\()]/g,"\\$&");
+let pg=[],cu=[],y=H-M;
+const nl=()=>{pg.push(cu.join("\n"));cu=[];y=H-M};
+const wrap=(t,sz)=>{const n=Math.floor(CW/(sz*.55)),o=[];String(t).split("\n").forEach(p=>{let l="";p.split(" ").forEach(w=>{while(w.length>n){if(l){o.push(l);l=""}o.push(w.slice(0,n));w=w.slice(n)}if((l+" "+w).trim().length>n){o.push(l);l=w}else l=(l+" "+w).trim()});o.push(l)});return o};
+const ln=(t,sz,b,gap,col)=>{wrap(t,sz).forEach(x=>{if(y-sz<M)nl();cu.push(`BT /F${b?2:1} ${sz} Tf ${col||"0.106 0.165 0.255"} rg ${M} ${y-sz} Td (${pe(x)}) Tj ET`);y-=sz*1.25});y-=gap};
+const act=S.items.filter(i=>i.status!=="Erledigt").sort(rank),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=S.items.filter(i=>i.status==="Erledigt").sort(rank);
+ln("Rückkehr-Übersicht",20,1,4);
+[S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean).forEach(t=>ln(t,11,0,0,"0.2 0.2 0.18"));
+y-=10;
+const sec=(t,a)=>{if(!a.length)return;ln(t,14,1,6);a.forEach(i=>{ln(i.titel,12,1,1);ln(`${fd(i.datum)}  |  ${i.status}${i.wichtig?"  |  Wichtig":""}`,10,0,2,"0.2 0.2 0.18");if(i.details)ln(i.details,11,0,0);y-=10});y-=4};
+if(S.items.length){sec("Das Wichtigste",imp);sec("Offen und in Klärung",rest);sec("Erledigt",done)}else ln("Keine Einträge.",11,0,0);
+nl();
+const N=4+pg.length*2,ob=[];
+ob[1]="<</Type/Catalog/Pages 2 0 R>>";
+ob[2]=`<</Type/Pages/Kids [${pg.map((_,i)=>`${5+2*i} 0 R`).join(" ")}]/Count ${pg.length}>>`;
+ob[3]="<</Type/Font/Subtype/Type1/BaseFont/Helvetica/Encoding/WinAnsiEncoding>>";
+ob[4]="<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold/Encoding/WinAnsiEncoding>>";
+pg.forEach((c,i)=>{ob[5+2*i]=`<</Type/Page/Parent 2 0 R/MediaBox [0 0 ${W} ${H}]/Resources<</Font<</F1 3 0 R/F2 4 0 R>>>>/Contents ${6+2*i} 0 R>>`;ob[6+2*i]=`<</Length ${c.length}>>\nstream\n${c}\nendstream`});
+let o="%PDF-1.4\n",off=[];
+for(let k=1;k<=N;k++){off[k]=o.length;o+=`${k} 0 obj\n${ob[k]}\nendobj\n`}
+const xr=o.length;
+o+=`xref\n0 ${N+1}\n0000000000 65535 f \n`+off.slice(1).map(v=>String(v).padStart(10,"0")+" 00000 n \n").join("")+`trailer\n<</Size ${N+1}/Root 1 0 R>>\nstartxref\n${xr}\n%%EOF`;
+return Uint8Array.from(o,c=>c.charCodeAt(0)&255)}
+$("#bp").onclick=()=>out(`Rueckkehr-Uebersicht-${today()}.pdf`,pdf(),"application/pdf");
 $("#bm").onclick=async e=>{const t=rep().md,b=e.target;try{await navigator.clipboard.writeText(t)}catch(x){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(y){}a.remove()}
 b.textContent="Kopiert";setTimeout(()=>b.textContent="Als Markdown kopieren",1600)};
 $("#bb").onclick=async()=>{await out(`Rueckkehr-Backup-${today()}.json`,JSON.stringify(S,null,1),"application/json");S.meta.bk=today();save();render()};
