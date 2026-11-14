@@ -39,11 +39,11 @@ textarea{min-height:96px;resize:vertical}
 .top{display:flex;justify-content:space-between;gap:8px}
 .sub{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:.85rem;color:var(--mute)}
 .chip{border-radius:5px;padding:1px 8px;font-size:.8rem;background:#1B2A41;color:#B7BFBC}
-.s1{background:#A8A594;color:#1B2A41}.s2{background:var(--c2);color:var(--c2t)}
+.s1{background:#A8A594;color:#1B2A41}.s3{background:#7C93A0;color:#1B2A41}.s2{background:var(--c2);color:var(--c2t)}
 .imp{font-size:.78rem;border:1px solid var(--ink);border-radius:5px;padding:0 6px;height:fit-content}
 .mv{display:flex;gap:6px;margin-left:auto}
 .mv button{font:inherit;width:44px;height:36px;border:1px solid var(--line);border-radius:7px;background:transparent;color:inherit;cursor:pointer}
-.empty,#cnt,#bk{color:var(--mute);font-size:.9rem}
+.empty,#cnt,#bk,#hint{color:var(--mute);font-size:.9rem}
 .r{}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.r{animation:none}.sw,.sw::after{transition:none}}
@@ -120,6 +120,7 @@ dialog .btns{margin-top:14px}
 <button class="btn" id="bm">Als Markdown kopieren</button>
 <button class="btn" id="bt" style="grid-column:1/-1">Als Text kopieren (Teams, E-Mail)</button>
 </div>
+<p id="hint"></p>
 <h2 class="k">Backup</h2>
 <div class="btns">
 <button class="btn" id="bb">Backup speichern</button>
@@ -132,7 +133,7 @@ dialog .btns{margin-top:14px}
 <label class="tg" style="margin-bottom:10px"><input type="checkbox" id="hd"><span class="sw"></span>Mit Datum</label>
 <label class="f" id="dw">Datum<input type="date" id="da"></label>
 <label class="f">Kurztitel<input id="ti" placeholder="z. B. Techniker nicht erschienen"></label>
-<label class="f">Status<select id="st"><option>Offen</option><option>In Klärung</option><option>Erledigt</option></select></label>
+<label class="f">Status<select id="st"><option>Offen</option><option>In Klärung</option><option>Info</option><option>Erledigt</option><option value="">&nbsp;</option></select></label>
 <label class="tg" style="margin-bottom:10px"><input type="checkbox" id="wi"><span class="sw"></span>Wichtig</label>
 <label class="tg" style="margin-bottom:10px"><input type="checkbox" id="nb"><span class="sw"></span>Nicht im Bericht (nur intern)</label>
 <label class="f">Kontakt zu diesem Eintrag (optional)<input id="kt" placeholder="z. B. Firma XY, Herr Beispiel, 0123 456789"></label>
@@ -146,7 +147,7 @@ dialog .btns{margin-top:14px}
 <div id="rep"></div>
 <input type="file" id="imp" accept=".json,application/json" hidden>
 <script>
-const K="rueckkehr-v1",$=s=>document.querySelector(s),ST=["Offen","In Klärung","Erledigt"];
+const K="rueckkehr-v1",$=s=>document.querySelector(s),ST=["Offen","In Klärung","Info","","Erledigt"],CL={"Offen":"s0","In Klärung":"s1","Info":"s3","Erledigt":"s2"};
 let S={meta:{zt:"",vt:"",ei:"",ko:"",so:"st",bk:""},items:[]},cur=null;
 try{const r=JSON.parse(localStorage.getItem(K));if(r&&Array.isArray(r.items))S={meta:Object.assign(S.meta,r.meta),items:r.items}}catch(e){}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
@@ -161,7 +162,7 @@ const und=a=>S.meta.so==="man"?a:a.sort((x,y)=>(!y.datum)-(!x.datum));
 const C=()=>S.meta.cols||(S.meta.cols={sta:1,dat:1,det:1,kon:1});
 const vis=()=>S.items.filter(i=>!($("#fo").checked&&i.status==="Erledigt")&&!($("#fw").checked&&!i.wichtig));
 const rp=()=>vis().filter(i=>!i.intern);
-const smy=(a,b,c)=>[a.length&&a.length+" wichtig",b.length&&b.length+" weitere offen",c.length&&c.length+" erledigt"].filter(Boolean).join(" · ");
+const smy=p=>[p.imp.length&&p.imp.length+" wichtig",p.rest.length&&p.rest.length+(p.imp.length?" weitere offen":" offen"),p.oth.length&&p.oth.length+" sonstige",p.done.length&&p.done.length+" erledigt"].filter(Boolean).join(" · ");
 let V="l";
 const tab=v=>{V=v;$("#tl").classList.toggle("on",v==="l");$("#tv").classList.toggle("on",v==="v");render()};
 let VIS=[];
@@ -169,7 +170,7 @@ function mv(id,d){const k=VIS.findIndex(x=>x.id===id),nb=VIS[k+d];if(!nb)return;
 function render(){
 const c=C(),v=vis().sort(rank);und(v);
 const man=S.meta.so==="man",both=!man&&v.some(x=>!x.datum)&&v.some(x=>x.datum),g="grid-template-columns:1fr"+(c.sta?" 96px":"")+(c.dat?" 88px":"");
-$("#list").innerHTML=v.length?`<div class="tb"><div class="th" style="${g}"><span>Titel</span>${c.sta?"<span>Status</span>":""}${c.dat?"<span>Datum</span>":""}</div>`+v.map((i,n)=>`${both&&(n===0||!v[n-1].datum!==!i.datum)?`<div class="g">${i.datum?"Mit Datum":"Allgemeine Infos"}</div>`:""}<div class="tr${i.wichtig?" w":""}" data-id="${i.id}" style="${g}"><div class="tt"><b>${esc(i.titel)}</b>${i.intern?"<em> · nicht im Bericht</em>":""}${c.det&&i.details?`<small>${esc(i.details)}</small>`:""}${c.kon&&i.kontakt?`<small>Kontakt: ${esc(i.kontakt)}</small>`:""}${man?`<span class="mv"><button data-mv="${i.id}" data-d="-1" aria-label="nach oben">▲</button><button data-mv="${i.id}" data-d="1" aria-label="nach unten">▼</button></span>`:""}</div>${c.sta?`<span><span class="chip s${ST.indexOf(i.status)}">${i.status}</span></span>`:""}${c.dat?`<span class="dt">${fd(i.datum)}</span>`:""}</div>`).join("")+"</div>":`<p class="empty">Keine Einträge. Tippe auf „Neuer Eintrag“.</p>`;
+$("#list").innerHTML=v.length?`<div class="tb"><div class="th" style="${g}"><span>Titel</span>${c.sta?"<span>Status</span>":""}${c.dat?"<span>Datum</span>":""}</div>`+v.map((i,n)=>`${both&&(n===0||!v[n-1].datum!==!i.datum)?`<div class="g">${i.datum?"Mit Datum":"Allgemeine Infos"}</div>`:""}<div class="tr${i.wichtig?" w":""}" data-id="${i.id}" style="${g}"><div class="tt"><b>${esc(i.titel)}</b>${i.intern?"<em> · nicht im Bericht</em>":""}${c.det&&i.details?`<small>${esc(i.details)}</small>`:""}${c.kon&&i.kontakt?`<small>Kontakt: ${esc(i.kontakt)}</small>`:""}${man?`<span class="mv"><button data-mv="${i.id}" data-d="-1" aria-label="nach oben">▲</button><button data-mv="${i.id}" data-d="1" aria-label="nach unten">▼</button></span>`:""}</div>${c.sta?`<span>${i.status?`<span class="chip ${CL[i.status]||"s0"}">${esc(i.status)}</span>`:""}</span>`:""}${c.dat?`<span class="dt">${fd(i.datum)}</span>`:""}</div>`).join("")+"</div>":`<p class="empty">Keine Einträge. Tippe auf „Neuer Eintrag“.</p>`;
 VIS=v;$("#cnt").textContent=`${v.length} von ${S.items.length} Einträgen`;
 const b=S.meta.bk;$("#bk").textContent=b?`Letztes Backup: ${fd(b)}${(Date.now()-new Date(b))/864e5>7?" (älter als 7 Tage, bitte erneuern)":""}`:"Noch kein Backup gespeichert. Bitte regelmäßig sichern.";
 $("#list").hidden=V==="v";$("#pvw").hidden=V!=="v";if(V==="v")$("#pvw").innerHTML=`<div class="rp">${rep().html}</div>`;
@@ -177,7 +178,7 @@ $("#list").hidden=V==="v";$("#pvw").hidden=V!=="v";if(V==="v")$("#pvw").innerHTM
 const dw=()=>{$("#dw").style.display=$("#hd").checked?"":"none"};
 $("#hd").onchange=()=>{dw();if($("#hd").checked&&!$("#da").value)$("#da").value=today()};
 function openD(id){cur=id;const i=S.items.find(x=>x.id===id)||{datum:"",titel:"",status:"Offen",wichtig:false,details:""};
-$("#hd").checked=!!i.datum;$("#da").value=i.datum||today();dw();$("#ti").value=i.titel;$("#st").value=i.status;$("#wi").checked=!!i.wichtig;$("#nb").checked=!!i.intern;$("#de").value=i.details||"";$("#kt").value=i.kontakt||"";$("#del").hidden=!id;$("#dlg").showModal()}
+$("#hd").checked=!!i.datum;$("#da").value=i.datum||today();dw();$("#ti").value=i.titel;$("#st").value=i.status||"";$("#wi").checked=!!i.wichtig;$("#nb").checked=!!i.intern;$("#de").value=i.details||"";$("#kt").value=i.kontakt||"";$("#del").hidden=!id;$("#dlg").showModal()}
 $("#add").onclick=()=>openD(null);
 $("#list").onclick=e=>{const m=e.target.closest("[data-mv]");if(m){mv(m.dataset.mv,+m.dataset.d);return}const r=e.target.closest(".tr");if(r)openD(r.dataset.id)};
 $("#tl").onclick=()=>tab("l");$("#tv").onclick=()=>tab("v");
@@ -196,32 +197,56 @@ $("#ei").oninput=e=>{S.meta.ei=e.target.value;save()};
 $("#ko").oninput=e=>{S.meta.ko=e.target.value;save()};
 $("#so").onchange=e=>{S.meta.so=e.target.value;save();render()};
 const fill=()=>{$("#zt").value=S.meta.zt;$("#vt").value=S.meta.vt;$("#ei").value=S.meta.ei;$("#ko").value=S.meta.ko;$("#so").value=S.meta.so;document.querySelectorAll("[data-c]").forEach(x=>x.checked=!!C()[x.dataset.c])};fill();
+const lines=s=>String(s||"").split("\n").map(x=>x.trim()).filter(Boolean);
+const meta=(i,t)=>[i.datum&&fd(i.datum),i.status,i.wichtig&&t!=="Das Wichtigste"&&"Wichtig"].filter(Boolean).join(" · ");
+function parts(){
+const all=und(rp().filter(i=>i.status!=="Erledigt").sort(rank));
+return{imp:all.filter(i=>i.wichtig),rest:all.filter(i=>!i.wichtig&&(i.status==="Offen"||i.status==="In Klärung")),oth:all.filter(i=>!i.wichtig&&i.status!=="Offen"&&i.status!=="In Klärung"),done:und(rp().filter(i=>i.status==="Erledigt").sort(rank)),n:all.length}}
 function rep(){
-const act=und(rp().filter(i=>i.status!=="Erledigt").sort(rank)),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=und(rp().filter(i=>i.status==="Erledigt").sort(rank));
-const sec=(t,a)=>a.length?`<h2>${t}</h2>`+a.map((i,n)=>`<article data-id="${i.id}" style="--i:${n}"><h3>${esc(i.titel)}</h3><p class="m">${i.datum?`<span>${fd(i.datum)}</span>`:""}<span class="c">${i.status}</span></p>${i.details?`<p>${esc(i.details)}</p>`:""}${i.kontakt?`<p>Kontakt: ${esc(i.kontakt)}</p>`:""}</article>`).join(""):"";
-const md=(t,a)=>a.length?`\n## ${t}\n`+a.map(i=>`- **${i.titel}** (${[i.datum&&fd(i.datum),i.status].filter(Boolean).join(", ")})${i.details?": "+i.details.replace(/\n/g," "):""}${i.kontakt?" (Kontakt: "+i.kontakt+")":""}`).join("\n")+"\n":"";
-const head=[S.meta.ei&&"Einrichtung: "+S.meta.ei,S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean);
-return{html:`<h1>Rückkehr-Übersicht</h1><p class="m">${head.map(esc).join(" | ")}</p><p class="m">${smy(imp,rest,done)}</p>`+(S.meta.ko?`<h2>Kontakte</h2><article style="--i:0"><p>${esc(S.meta.ko)}</p></article>`:"")+(act.length+done.length?sec("Das Wichtigste",imp)+sec("Offen und in Klärung",rest)+sec("Erledigt",done):"<p>Keine Einträge.</p>"),
-md:`# Rückkehr-Übersicht\n\n${head.join("  \n")}\n\n${smy(imp,rest,done)}\n`+(S.meta.ko?`\n## Kontakte\n${S.meta.ko}\n`:"")+md("Das Wichtigste",imp)+md("Offen und in Klärung",rest)+md("Erledigt",done)}}
+const p=parts(),SC=[["Das Wichtigste",p.imp],["Offen und in Klärung",p.rest],["Infos und weitere Einträge",p.oth],["Erledigt",p.done]],has=p.n+p.done.length>0,
+H=[["Einrichtung",S.meta.ei],["Abwesenheit",S.meta.zt],["Vertretung",S.meta.vt]].filter(x=>x[1]),sm=smy(p);
+const sec=(t,a)=>a.length?`<h2>${t}</h2>`+a.map((i,n)=>{const d=[i.datum&&`<span>${fd(i.datum)}</span>`,i.status&&`<span class="c">${esc(i.status)}</span>`].filter(Boolean).join("");return`<article data-id="${i.id}" style="--i:${n}"><h3>${esc(i.titel)}</h3>${d?`<p class="m">${d}</p>`:""}${i.details?`<p>${esc(i.details)}</p>`:""}${i.kontakt?`<p>Kontakt: ${esc(i.kontakt)}</p>`:""}</article>`}).join(""):"";
+const mi=(i,t)=>{const m=meta(i,t),L=["- **"+i.titel+"**"];if(m)L.push("  - "+m);if(i.details)L.push("  - Details: "+lines(i.details).join("  \n    "));if(i.kontakt)L.push("  - Kontakt: "+i.kontakt);return L.join("\n")};
+const ti=(i,t)=>{const m=meta(i,t),L=["• "+i.titel],d=lines(i.details);if(m)L.push("   "+m);d.forEach((x,k)=>L.push("   "+(k?"":"Details: ")+x));if(i.kontakt)L.push("   Kontakt: "+i.kontakt);return L.join("\n")};
+const md=["# Rückkehr-Übersicht"],tx=["RÜCKKEHR-ÜBERSICHT"+(H.length?"\n"+H.map(x=>x[0]+": "+x[1]).join("\n"):"")];
+if(H.length)md.push(H.map(x=>"- **"+x[0]+":** "+x[1]).join("\n"));
+if(sm){md.push(sm);tx.push(sm)}
+if(S.meta.ko){md.push("## Kontakte\n\n"+lines(S.meta.ko).map(x=>"- "+x).join("\n"));tx.push("KONTAKTE\n"+lines(S.meta.ko).map(x=>"• "+x).join("\n"))}
+SC.forEach(([t,a])=>{if(a.length){md.push("## "+t+"\n\n"+a.map(i=>mi(i,t)).join("\n\n"));tx.push(t.toUpperCase()+"\n"+a.map(i=>ti(i,t)).join("\n\n"))}});
+if(!has){md.push("Keine Einträge.");tx.push("Keine Einträge.")}
+return{html:`<h1>Rückkehr-Übersicht</h1><p class="m">${H.map(x=>esc(x[0]+": "+x[1])).join(" | ")}</p>${sm?`<p class="m">${sm}</p>`:""}`+(S.meta.ko?`<h2>Kontakte</h2><article style="--i:0"><p>${esc(S.meta.ko)}</p></article>`:"")+(has?SC.map(x=>sec(x[0],x[1])).join(""):"<p>Keine Einträge.</p>"),md:md.join("\n\n")+"\n",txt:tx.join("\n\n")+"\n"}}
 async function out(name,txt,type){const f=new File([txt],name,{type});
 try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==="AbortError")return}
 const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
 $("#bh").onclick=()=>out(`Rueckkehr-Uebersicht-${today()}.html`,`<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rückkehr-Übersicht</title><style>body{margin:0}${$("#rpcss").textContent}</style></head><body><div class="rp">${rep().html}</div></body></html>`,"text/html");
 function pdf(){
-const W=595,H=842,M=56,CW=W-2*M,WM={"€":128,"„":132,"…":133,"‘":145,"’":146,"“":147,"”":148,"•":149,"–":150,"—":151};
+const W=595,H=842,M=56,CW=W-2*M,INK="0.106 0.165 0.255",GR="0.2 0.2 0.18",WM={"€":128,"„":132,"…":133,"‘":145,"’":146,"“":147,"”":148,"•":149,"–":150,"—":151};
+const WR=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+const WB=[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
 const enc=s=>[...String(s)].map(c=>{const k=c.charCodeAt(0);return WM[c]?String.fromCharCode(WM[c]):(k>=32&&k<256&&!(k>126&&k<160))?c:" "}).join("");
-const pe=s=>enc(s).replace(/[\\()]/g,"\\$&");
+const cw=(c,b)=>{const k=c.charCodeAt(0);return k>=32&&k<=126?(b?WB:WR)[k-32]:"ÄÖÜ".includes(c)?(b?780:760):(b?640:580)};
+const tw=(s,sz,b)=>[...s].reduce((a,c)=>a+cw(c,b),0)*sz/1000;
+const pe=s=>s.replace(/[\\()]/g,"\\$&");
+const wrap=(t,sz,b,w)=>{const o=[];String(t).split("\n").map(enc).forEach(par=>{let l="";par.split(" ").forEach(word=>{
+while(tw(word,sz,b)>w){let k=1;while(k<word.length&&tw(word.slice(0,k+1),sz,b)<=w)k++;if(l){o.push(l);l=""}o.push(word.slice(0,k));word=word.slice(k)}
+const t2=l?l+" "+word:word;if(l&&tw(t2,sz,b)>w){o.push(l);l=word}else l=t2});o.push(l)});return o};
 let pg=[],cu=[],y=H-M;
 const nl=()=>{pg.push(cu.join("\n"));cu=[];y=H-M};
-const wrap=(t,sz)=>{const n=Math.floor(CW/(sz*.55)),o=[];String(t).split("\n").forEach(p=>{let l="";p.split(" ").forEach(w=>{while(w.length>n){if(l){o.push(l);l=""}o.push(w.slice(0,n));w=w.slice(n)}if((l+" "+w).trim().length>n){o.push(l);l=w}else l=(l+" "+w).trim()});o.push(l)});return o};
-const ln=(t,sz,b,gap,col)=>{wrap(t,sz).forEach(x=>{if(y-sz<M)nl();cu.push(`BT /F${b?2:1} ${sz} Tf ${col||"0.106 0.165 0.255"} rg ${M} ${y-sz} Td (${pe(x)}) Tj ET`);y-=sz*1.25});y-=gap};
-const act=und(rp().filter(i=>i.status!=="Erledigt").sort(rank)),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=und(rp().filter(i=>i.status==="Erledigt").sort(rank));
-ln("Rückkehr-Übersicht",20,1,4);
-[S.meta.ei&&"Einrichtung: "+S.meta.ei,S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean).forEach(t=>ln(t,11,0,0,"0.2 0.2 0.18"));
-ln(smy(imp,rest,done),11,0,0,"0.2 0.2 0.18");y-=10;if(S.meta.ko){ln("Kontakte",14,1,6);ln(S.meta.ko,11,0,0);y-=14}
-const sec=(t,a)=>{if(!a.length)return;ln(t,14,1,6);a.forEach(i=>{ln(i.titel,12,1,1);ln([i.datum&&fd(i.datum),i.status,i.wichtig&&"Wichtig"].filter(Boolean).join("  |  "),10,0,2,"0.2 0.2 0.18");if(i.details)ln(i.details,11,0,0);if(i.kontakt)ln("Kontakt: "+i.kontakt,10,0,0,"0.2 0.2 0.18");y-=10});y-=4};
-if(act.length+done.length){sec("Das Wichtigste",imp);sec("Offen und in Klärung",rest);sec("Erledigt",done)}else ln("Keine Einträge.",11,0,0);
+const P=(t,sz,b,col,gap)=>({L:wrap(t,sz,b,CW),sz,b,col,gap:gap||0});
+const RL=()=>({rule:1,L:[],sz:0,gap:8});
+const hh=it=>it.rule?it.gap:it.L.length*it.sz*1.25+it.gap;
+const draw=its=>{const h=its.reduce((a,it)=>a+hh(it),0);if(y-h<M&&h<H-2*M)nl();
+its.forEach(it=>{if(it.rule){cu.push(`0.28 0.38 0.48 RG 0.6 w ${M} ${(y+2).toFixed(1)} m ${W-M} ${(y+2).toFixed(1)} l S`);y-=it.gap;return}
+it.L.forEach(x=>{if(y-it.sz<M)nl();cu.push(`BT /F${it.b?2:1} ${it.sz} Tf ${it.col} rg ${M} ${(y-it.sz).toFixed(1)} Td (${pe(x)}) Tj ET`);y-=it.sz*1.25});y-=it.gap})};
+const p=parts(),has=p.n+p.done.length>0,sm=smy(p);
+const top=[P("Rückkehr-Übersicht",20,1,INK,4)];
+[S.meta.ei&&"Einrichtung: "+S.meta.ei,S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt,sm].filter(Boolean).forEach(t=>top.push(P(t,11,0,GR,0)));
+top[top.length-1].gap+=14;draw(top);
+if(S.meta.ko)draw([P("Kontakte",14,1,INK,2),RL(),P(lines(S.meta.ko).join("\n"),11,0,INK,16)]);
+const sec=(t,a)=>{a.forEach((i,n)=>{const m=meta(i,t),its=[];if(n===0)its.push(P(t,14,1,INK,2),RL());its.push(P(i.titel,12,1,INK,1));if(m)its.push(P(m,10,0,GR,2));if(i.details)its.push(P(i.details,11,0,INK,0));if(i.kontakt)its.push(P("Kontakt: "+i.kontakt,10,0,GR,0));its[its.length-1].gap+=10;draw(its)});if(a.length)y-=6};
+if(has){sec("Das Wichtigste",p.imp);sec("Offen und in Klärung",p.rest);sec("Infos und weitere Einträge",p.oth);sec("Erledigt",p.done)}else draw([P("Keine Einträge.",11,0,INK,0)]);
 nl();
+const NP=pg.length;pg=pg.map((c,k)=>{const f="Seite "+(k+1)+" von "+NP;return c+`\nBT /F1 9 Tf ${GR} rg ${M} 30 Td (Rückkehr-Übersicht) Tj ET\nBT /F1 9 Tf ${GR} rg ${(W-M-tw(f,9,0)).toFixed(1)} 30 Td (${f}) Tj ET`});
 const N=4+pg.length*2,ob=[];
 ob[1]="<</Type/Catalog/Pages 2 0 R>>";
 ob[2]=`<</Type/Pages/Kids [${pg.map((_,i)=>`${5+2*i} 0 R`).join(" ")}]/Count ${pg.length}>>`;
@@ -233,11 +258,17 @@ for(let k=1;k<=N;k++){off[k]=o.length;o+=`${k} 0 obj\n${ob[k]}\nendobj\n`}
 const xr=o.length;
 o+=`xref\n0 ${N+1}\n0000000000 65535 f \n`+off.slice(1).map(v=>String(v).padStart(10,"0")+" 00000 n \n").join("")+`trailer\n<</Size ${N+1}/Root 1 0 R>>\nstartxref\n${xr}\n%%EOF`;
 return Uint8Array.from(o,c=>c.charCodeAt(0)&255)}
+async function cp(t){try{await navigator.clipboard.writeText(t);return 1}catch(e){}
+const a=document.createElement("textarea");a.value=t;a.setAttribute("readonly","");a.style.cssText="position:fixed;opacity:0";document.body.appendChild(a);a.select();a.setSelectionRange(0,t.length);let ok=0;try{ok=document.execCommand("copy")}catch(e){}a.remove();return ok}
+async function flash(b,t){const o=b.textContent,ok=await cp(t);b.textContent=ok?"Kopiert":"Kopieren nicht möglich";setTimeout(()=>b.textContent=o,1800)}
+function hint(m){$("#hint").textContent=m;clearTimeout(hint.t);hint.t=setTimeout(()=>$("#hint").textContent="",9000)}
 $("#bp").onclick=()=>out(`Rueckkehr-Uebersicht-${today()}.pdf`,pdf(),"application/pdf");
-$("#bd").onclick=()=>{$("#rep").innerHTML=`<div class="rp">${rep().html}</div>`;window.print()};
-$("#bt").onclick=async e=>{const t=rep().md.replace(/\*\*/g,"").replace(/^#+ /gm,""),b=e.target,o=b.textContent;try{await navigator.clipboard.writeText(t)}catch(x){}b.textContent="Kopiert";setTimeout(()=>b.textContent=o,1600)};
-$("#bm").onclick=async e=>{const t=rep().md,b=e.target;try{await navigator.clipboard.writeText(t)}catch(x){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(y){}a.remove()}
-b.textContent="Kopiert";setTimeout(()=>b.textContent="Als Markdown kopieren",1600)};
+$("#bd").onclick=()=>{const sa=navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);
+$("#rep").innerHTML=`<div class="rp">${rep().html}</div>`;
+if(sa)hint("Erscheint kein Druckfenster, blockiert iOS es in der Home-Bildschirm-App. Nutze dann „Bericht als PDF“ oder öffne die Seite in Safari.");
+try{window.print()}catch(e){hint("Der Druckdialog ist hier nicht verfügbar. Nutze „Bericht als PDF“.")}};
+$("#bt").onclick=e=>flash(e.target,rep().txt);
+$("#bm").onclick=e=>flash(e.target,rep().md);
 $("#bb").onclick=async()=>{await out(`Rueckkehr-Backup-${today()}.json`,JSON.stringify(S,null,1),"application/json");S.meta.bk=today();save();render()};
 $("#bl").onclick=()=>$("#imp").click();
 $("#imp").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
