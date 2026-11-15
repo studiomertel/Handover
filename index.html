@@ -38,8 +38,9 @@ textarea{min-height:96px;resize:vertical}
 .row:active p{color:var(--acc-ink)}
 .top{display:flex;justify-content:space-between;gap:8px}
 .sub{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:.85rem;color:var(--mute)}
-.chip{border-radius:5px;padding:1px 8px;font-size:.8rem;background:#1B2A41;color:#B7BFBC}
-.s1{background:#A8A594;color:#1B2A41}.s2{background:var(--c2);color:var(--c2t)}
+.chip{display:inline-block;min-width:6.6em;text-align:center;border:1px solid var(--ink);border-radius:5px;padding:1px 8px;font-size:.8rem;color:var(--ink)}
+.chip.s1{border-color:transparent;background:#A8A594;color:#1B2A41}.chip.s2{border-color:transparent;background:#A8ACA6;color:#45473E}
+@media (prefers-color-scheme:dark){.chip.s1{background:#5C6E3C;color:#B7BFBC}.chip.s2{background:#45473E;color:#A8ACA6}}
 .imp{font-size:.78rem;border:1px solid var(--ink);border-radius:5px;padding:0 6px;height:fit-content}
 .mv{display:flex;gap:6px;margin-left:auto}
 .mv button{font:inherit;width:44px;height:36px;border:1px solid var(--line);border-radius:7px;background:transparent;color:inherit;cursor:pointer}
@@ -55,22 +56,6 @@ h2.k{font-size:1rem;margin:26px 0 10px}
 dialog{width:min(94vw,520px);border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:18px}
 dialog::backdrop{background:rgba(27,42,65,.6)}
 dialog .btns{margin-top:14px}
-#rep{display:none}
-@media print{body>*:not(#rep){display:none!important}#rep{display:block!important}:root{padding:0}}
-</style>
-<style id="rpcss">
-.rp{background:#B7BFBC;color:#1B2A41;font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:28px 18px;min-height:100vh;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.rp>*{max-width:720px;margin-left:auto;margin-right:auto}
-.rp h1{font-size:1.6rem;margin-top:0;margin-bottom:4px}
-.rp h2{font-size:1.1rem;margin-top:26px;margin-bottom:10px;color:#33342E}
-.rp .m{color:#33342E;margin-top:0;margin-bottom:6px;display:flex;gap:8px;flex-wrap:wrap}
-.rp article{border:1px solid #47607A;border-radius:8px;padding:12px 14px;margin-bottom:10px;animation:rpr .5s both;animation-delay:calc(var(--i)*80ms)}
-.rp h3{font-size:1rem;margin:0 0 4px}
-.rp article p{margin:4px 0 0;white-space:pre-wrap}
-.rp .c{background:#1B2A41;color:#B7BFBC;border-radius:5px;padding:0 7px;font-size:.8rem}
-@keyframes rpr{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@media print{.rp{background:#fff;padding:0;min-height:0}.rp article{animation:none;break-inside:avoid}}
-@media (prefers-reduced-motion:reduce){.rp article{animation:none}}
 </style>
 </head>
 <body>
@@ -91,15 +76,15 @@ dialog .btns{margin-top:14px}
 <p id="cnt"></p>
 <h2 class="k">Ausgabe und Backup</h2>
 <div class="btns">
-<button class="btn p" id="bh">Bericht als HTML</button>
-<button class="btn p" id="bi">Bericht interaktiv</button>
+<button class="btn p" id="bh">Bericht statisch (HTML)</button>
+<button class="btn p" id="bi">Bericht interaktiv (HTML)</button>
 <button class="btn p" id="bp">Bericht als PDF</button>
 <button class="btn" id="bm">Als Markdown kopieren</button>
 <button class="btn" id="bb">Backup speichern</button>
 <button class="btn" id="bl">Backup laden</button>
 </div>
 <p id="bk"></p>
-<p style="margin-top:4px;font-size:.8rem;color:var(--mute)">Version 3 (interaktiver Bericht)</p>
+<p style="margin-top:4px;font-size:.8rem;color:var(--mute)">Version 5 (Bericht statisch und interaktiv)</p>
 </div>
 <button class="fab" id="add">+ Neuer Eintrag</button>
 <dialog id="dlg">
@@ -115,7 +100,6 @@ dialog .btns{margin-top:14px}
 <button class="btn" id="del" style="grid-column:1/-1">Eintrag löschen</button>
 </div>
 </dialog>
-<div id="rep"></div>
 <input type="file" id="imp" accept=".json,application/json" hidden>
 <script>
 const K="rueckkehr-v1",$=s=>document.querySelector(s),ST=["Offen","In Klärung","Erledigt"];
@@ -156,15 +140,12 @@ $("#so").onchange=e=>{S.meta.so=e.target.value;save();render()};
 const fill=()=>{$("#zt").value=S.meta.zt;$("#vt").value=S.meta.vt;$("#ei").value=S.meta.ei;$("#ko").value=S.meta.ko;$("#so").value=S.meta.so};fill();
 function rep(){
 const act=S.items.filter(i=>i.status!=="Erledigt").sort(rank),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=S.items.filter(i=>i.status==="Erledigt").sort(rank);
-const sec=(t,a)=>a.length?`<h2>${t}</h2>`+a.map((i,n)=>`<article style="--i:${n}"><h3>${esc(i.titel)}</h3><p class="m"><span>${fd(i.datum)}</span><span class="c">${i.status}</span></p>${i.details?`<p>${esc(i.details)}</p>`:""}${i.kontakt?`<p>Kontakt: ${esc(i.kontakt)}</p>`:""}</article>`).join(""):"";
-const md=(t,a)=>a.length?`\n## ${t}\n`+a.map(i=>`- **${i.titel}** (${fd(i.datum)}, ${i.status})${i.details?": "+i.details.replace(/\n/g," "):""}${i.kontakt?" (Kontakt: "+i.kontakt+")":""}`).join("\n")+"\n":"";
+const md=(t,a)=>a.length?`\n## ${t}\n`+a.map(i=>`- **${i.titel}** (${i.status}, ${fd(i.datum)})${i.details?": "+i.details.replace(/\n/g," "):""}${i.kontakt?" (Kontakt: "+i.kontakt+")":""}`).join("\n")+"\n":"";
 const head=[S.meta.ei&&"Einrichtung: "+S.meta.ei,S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean);
-return{html:`<h1>Rückkehr-Übersicht</h1><p class="m">${head.map(esc).join(" | ")}</p>`+(S.meta.ko?`<h2>Kontakte</h2><article style="--i:0"><p>${esc(S.meta.ko)}</p></article>`:"")+(S.items.length?sec("Das Wichtigste",imp)+sec("Offen und in Klärung",rest)+sec("Erledigt",done):"<p>Keine Einträge.</p>"),
-md:`# Rückkehr-Übersicht\n\n${head.join("  \n")}\n`+(S.meta.ko?`\n## Kontakte\n${S.meta.ko}\n`:"")+md("Das Wichtigste",imp)+md("Offen und in Klärung",rest)+md("Erledigt",done)}}
+return{md:`# Rückkehr-Übersicht\n\n${head.join("  \n")}\n`+(S.meta.ko?`\n## Kontakte\n${S.meta.ko}\n`:"")+md("Das Wichtigste",imp)+md("Offen und in Klärung",rest)+md("Erledigt",done)}}
 async function out(name,txt,type){const f=new File([txt],name,{type});
 try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==="AbortError")return}
 const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
-$("#bh").onclick=()=>out(`Rueckkehr-Uebersicht-${today()}.html`,`<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rückkehr-Übersicht</title><style>body{margin:0}${$("#rpcss").textContent}</style></head><body><div class="rp">${rep().html}</div></body></html>`,"text/html");
 function pdf(){
 const W=595,H=842,M=56,CW=W-2*M,WM={"€":128,"„":132,"…":133,"‘":145,"’":146,"“":147,"”":148,"•":149,"–":150,"—":151};
 const enc=s=>[...String(s)].map(c=>{const k=c.charCodeAt(0);return WM[c]?String.fromCharCode(WM[c]):(k>=32&&k<256&&!(k>126&&k<160))?c:" "}).join("");
@@ -177,7 +158,7 @@ const act=S.items.filter(i=>i.status!=="Erledigt").sort(rank),imp=act.filter(i=>
 ln("Rückkehr-Übersicht",20,1,4);
 [S.meta.ei&&"Einrichtung: "+S.meta.ei,S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean).forEach(t=>ln(t,11,0,0,"0.2 0.2 0.18"));
 y-=10;if(S.meta.ko){ln("Kontakte",14,1,6);ln(S.meta.ko,11,0,0);y-=14}
-const sec=(t,a)=>{if(!a.length)return;ln(t,14,1,6);a.forEach(i=>{ln(i.titel,12,1,1);ln(`${fd(i.datum)}  |  ${i.status}${i.wichtig?"  |  Wichtig":""}`,10,0,2,"0.2 0.2 0.18");if(i.details)ln(i.details,11,0,0);if(i.kontakt)ln("Kontakt: "+i.kontakt,10,0,0,"0.2 0.2 0.18");y-=10});y-=4};
+const sec=(t,a)=>{if(!a.length)return;ln(t,14,1,6);a.forEach(i=>{ln(i.titel,12,1,1);ln(`${i.status}${i.wichtig?"  |  Wichtig":""}  |  ${fd(i.datum)}`,10,0,2,"0.2 0.2 0.18");if(i.details)ln(i.details,11,0,0);if(i.kontakt)ln("Kontakt: "+i.kontakt,10,0,0,"0.2 0.2 0.18");y-=10});y-=4};
 if(S.items.length){sec("Das Wichtigste",imp);sec("Offen und in Klärung",rest);sec("Erledigt",done)}else ln("Keine Einträge.",11,0,0);
 nl();
 const N=4+pg.length*2,ob=[];
@@ -191,73 +172,96 @@ for(let k=1;k<=N;k++){off[k]=o.length;o+=`${k} 0 obj\n${ob[k]}\nendobj\n`}
 const xr=o.length;
 o+=`xref\n0 ${N+1}\n0000000000 65535 f \n`+off.slice(1).map(v=>String(v).padStart(10,"0")+" 00000 n \n").join("")+`trailer\n<</Size ${N+1}/Root 1 0 R>>\nstartxref\n${xr}\n%%EOF`;
 return Uint8Array.from(o,c=>c.charCodeAt(0)&255)}
-const IVCSS=`:root{--bg:#B7BFBC;--ink:#1B2A41;--mute:#33342E;--line:#47607A;--acc:#3A431F;--ai:#B7BFBC;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#33342E;--ink:#B7BFBC;--mute:#A8ACA6;--line:#93958A;--acc:#94A37E;--ai:#1B2A41;color-scheme:dark}}
+const IVL="--bg:#B7BFBC;--ink:#1B2A41;--mute:#45473E;--line:#93958A;--acc:#3A431F;--ai:#B7BFBC;--c1:#A8A594;--c1t:#1B2A41;--c2:#A8ACA6;--c2t:#45473E;--w:#3A431F;--wt:#B7BFBC";
+const IVD="--bg:#33342E;--ink:#B7BFBC;--mute:#A8ACA6;--line:#45473E;--acc:#94A37E;--ai:#1B2A41;--c1:#5C6E3C;--c1t:#B7BFBC;--c2:#45473E;--c2t:#A8ACA6;--w:#94A37E;--wt:#1B2A41";
+const IVCSS=`:root{${IVL};color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${IVD};color-scheme:dark}}
+:root[data-theme="dark"]{${IVD};color-scheme:dark}
 *{box-sizing:border-box}html{font-size:16px}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
 .w{max-width:720px;margin:0 auto;padding:24px 16px 60px}
-h1{font-size:1.6em;margin:0 0 4px}h2{font-size:1.1em;margin:24px 0 10px}
-.m{color:var(--mute);margin:0 0 10px}
-.ctl{display:none;flex-direction:column;gap:10px;margin:14px 0;padding:12px 14px;border:1px solid var(--line);border-radius:8px}
+h1{font-size:1.5em;margin:0 0 4px;font-weight:650}
+h2{font-size:.78em;margin:26px 0 10px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.m{color:var(--mute);margin:0 0 6px;font-size:.92em}
+.ctl{display:none;flex-direction:column;gap:12px;margin:16px 0;padding:14px;border:1px solid var(--line);border-radius:8px}
 .js .ctl{display:flex}
-.ctl label.f{font-size:.85em;color:var(--mute)}
-input[type=search],select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:7px;padding:9px 10px;margin-top:4px}
+.ctl label.f{font-size:.82em;color:var(--mute)}
+input[type=search],input[type=date],select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:transparent;border:1px solid var(--mute);border-radius:7px;padding:9px 10px;margin-top:4px;min-height:44px}
 input[type=range]{width:100%;accent-color:var(--acc)}
 .g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tg{display:flex;align-items:center;gap:10px;font-size:.92em;cursor:pointer}
+.tg{display:flex;align-items:center;gap:10px;font-size:.9em;cursor:pointer}
 .tg input{position:absolute;opacity:0;width:1px;height:1px}
-.sw{flex:none;width:44px;height:24px;border:1px solid var(--line);border-radius:7px;position:relative}
-.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:5px;background:var(--ink);transition:transform .2s}
-.tg input:checked+.sw{background:var(--acc)}
+.sw{flex:none;width:44px;height:24px;border:1px solid var(--mute);border-radius:7px;position:relative}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:5px;background:var(--mute);transition:transform .2s}
+.tg input:checked+.sw{background:var(--acc);border-color:var(--acc)}
 .tg input:checked+.sw::after{transform:translateX(20px);background:var(--ai)}
 .tg input:focus-visible+.sw,button:focus-visible,summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-button{font:inherit;font-size:.92em;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink);cursor:pointer}
-#cn{color:var(--mute);font-size:.9em}
+button{font:inherit;font-size:.9em;padding:9px 12px;min-height:44px;border:1px solid var(--mute);border-radius:8px;background:transparent;color:var(--ink);cursor:pointer}
+#cn{color:var(--mute);font-size:.85em;margin:8px 0 0}
 details.it,details.kb{border:1px solid var(--line);border-radius:8px;margin-bottom:10px;animation:rise .4s both;animation-delay:calc(var(--i,0)*50ms)}
+details.it.imp{border-left:3px solid var(--w)}
 details.kb{margin:10px 0}
-summary{cursor:pointer;list-style:none;padding:12px 14px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+summary{cursor:pointer;list-style:none;position:relative;padding:12px 34px 12px 14px;display:grid;grid-template-columns:6.6em 4.6em 1fr;gap:6px 10px;align-items:center}
+details.kb>summary{display:block}
 summary::-webkit-details-marker{display:none}
-summary::before{content:"\\25B8";color:var(--mute)}
-details[open]>summary::before{content:"\\25BE"}
-summary b{flex:1 1 60%}
-.c{border-radius:5px;padding:0 8px;font-size:.8em;background:#1B2A41;color:#B7BFBC}
-.c.s1{background:#A8A594;color:#1B2A41}.c.s2{background:var(--acc);color:var(--ai)}
-.imp{font-size:.78em;border:1px solid var(--ink);border-radius:5px;padding:0 6px}
-.d{font-size:.85em;color:var(--mute)}
-.bd{padding:0 14px 12px}.bd p{margin:4px 0 0;white-space:pre-wrap}
+summary::after{content:"\\25B8";position:absolute;right:14px;top:12px;color:var(--mute)}
+details[open]>summary::after{content:"\\25BE"}
+.t{grid-column:1/-1;font-weight:600}
+.c{display:block;text-align:center;border:1px solid var(--ink);border-radius:5px;padding:0 6px;font-size:.78em;line-height:1.7}
+.c.s1{border-color:transparent;background:var(--c1);color:var(--c1t)}
+.c.s2{border-color:transparent;background:var(--c2);color:var(--c2t)}
+.wi{font-size:.74em;line-height:1.7;text-align:center;border-radius:5px;background:var(--w);color:var(--wt)}
+.wi:empty{background:none}
+.d{font-size:.85em;color:var(--mute);font-variant-numeric:tabular-nums}
+.bd{padding:0 14px 12px}.bd p{margin:4px 0 0;white-space:pre-wrap;font-size:.95em}
 .empty{color:var(--mute)}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){details.it,details.kb{animation:none}.sw::after{transition:none}}`;
-const ivBody=r=>`<div class="w"><h1>Rückkehr-Übersicht</h1><p class="m" id="hd">${r.head}</p><div id="kb">${r.kb}</div>
-<div class="ctl"><label class="f">Suche (Titel, Details, Kontakte, Datum)<input type="search" id="q" placeholder="Suchbegriff eingeben"></label>
-<div class="g"><label class="tg"><input type="checkbox" id="fw"><span class="sw"></span>Nur Wichtige</label><label class="tg"><input type="checkbox" id="fe"><span class="sw"></span>Erledigte ausblenden</label></div>
-<label class="f">Status<select id="fs"><option value="all">Alle</option><option>Offen</option><option>In Klärung</option><option>Erledigt</option></select></label>
+@media (prefers-reduced-motion:reduce){details.it,details.kb{animation:none}.sw::after{transition:none}}
+@media print{.ctl{display:none!important}body{background:#fff;color:#000}details.it,details.kb{break-inside:avoid;animation:none}}`;
+const ivBody=(r,ia)=>`<div class="w"><h1>Rückkehr-Übersicht</h1><p class="m" id="hd">${r.head}</p><p class="m">${r.sum}</p><div id="kb">${r.kb}</div>
+`+(ia?`<div class="ctl"><label class="f">Suche (Titel, Details, Kontakte, Datum)<input type="search" id="q" placeholder="Suchbegriff eingeben"></label>
+<div class="g"><label class="tg"><input type="checkbox" id="fw"><span class="sw"></span>Nur Wichtige</label><label class="tg"><input type="checkbox" id="fe"><span class="sw"></span>Ohne Erledigte</label></div>
+<div class="g"><label class="f">Status<select id="fs"><option value="all">Alle</option><option>Offen</option><option>In Klärung</option><option>Erledigt</option></select></label>
+<label class="f">Sortierung<select id="so"><option value="st">Nach Status</option><option value="alt">Älteste zuerst</option><option value="neu">Neueste zuerst</option></select></label></div>
+<div class="g"><label class="f">Datum von<input type="date" id="dv"></label><label class="f">Datum bis<input type="date" id="db"></label></div>
 <label class="f">Schriftgröße<input type="range" id="fz" min="14" max="24" step="1" value="16"></label>
-<button id="ex">Alle aufklappen</button></div>
-<p id="cn">${r.cn}</p><div id="ls">${r.list}</div><p class="d">Bericht erzeugt mit App-Version 3</p></div>`;
+<label class="tg"><input type="checkbox" id="th"><span class="sw"></span>Dunkle Ansicht</label>
+<div class="g"><button id="ex">Alle aufklappen</button><button id="rs">Zurücksetzen</button></div></div>`:`<p class="d">Tippe auf einen Eintrag, um die Details zu sehen.</p>`)+`<p id="cn">${r.cn}</p><div id="ls">${r.list}</div><p class="d" style="margin-top:28px">Bericht erzeugt mit App-Version 5</p></div>`;
 function ivHtml(D,f){
 const ST=["Offen","In Klärung","Erledigt"];
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fd=d=>d?d.split("-").reverse().join("."):"";
 const head=[D.meta.ei&&"Einrichtung: "+D.meta.ei,D.meta.zt&&"Abwesenheit: "+D.meta.zt,D.meta.vt&&"Vertretung: "+D.meta.vt].filter(Boolean).map(esc).join(" | ");
 const kb=D.meta.ko?'<details class="kb"><summary><b>Kontakte</b></summary><div class="bd"><p>'+esc(D.meta.ko)+'</p></div></details>':"";
-const rk=(a,b)=>ST.indexOf(a.status)-ST.indexOf(b.status)||(b.wichtig?1:0)-(a.wichtig?1:0)||b.datum.localeCompare(a.datum);
+const cnt=ST.map(s=>D.items.filter(i=>i.status===s).length),nw=D.items.filter(i=>i.wichtig&&i.status!=="Erledigt").length;
+const sum=D.items.length?cnt[0]+" offen · "+cnt[1]+" in Klärung · "+cnt[2]+" erledigt"+(nw?" · davon "+nw+" wichtig und nicht erledigt":""):"";
+const rs=(a,b)=>ST.indexOf(a.status)-ST.indexOf(b.status)||(b.wichtig?1:0)-(a.wichtig?1:0)||b.datum.localeCompare(a.datum);
+const so=f.so||"st",rk=so==="alt"?(a,b)=>a.datum.localeCompare(b.datum):so==="neu"?(a,b)=>b.datum.localeCompare(a.datum):rs;
 const t=(f.t||"").toLowerCase();
-const card=(i,n)=>'<details class="it"'+(f.open?" open":"")+' style="--i:'+Math.min(n,8)+'"><summary><b>'+esc(i.titel)+'</b>'+(i.wichtig?'<span class="imp">Wichtig</span>':"")+'<span class="c s'+ST.indexOf(i.status)+'">'+esc(i.status)+'</span><span class="d">'+fd(i.datum)+'</span></summary><div class="bd">'+(i.details?'<p>'+esc(i.details)+'</p>':"")+(i.kontakt?'<p>Kontakt: '+esc(i.kontakt)+'</p>':"")+(!i.details&&!i.kontakt?'<p class="d">Keine weiteren Details.</p>':"")+'</div></details>';
-const v=D.items.filter(i=>(!f.fw||i.wichtig)&&(!f.fe||i.status!=="Erledigt")&&(!f.fs||f.fs==="all"||i.status===f.fs)&&(!t||[i.titel,i.details,i.kontakt,fd(i.datum),i.status].join(" ").toLowerCase().includes(t))).sort(rk);
+const card=(i,n)=>'<details class="it'+(i.wichtig?" imp":"")+'"'+((f.open||(f.openImp&&i.wichtig&&i.status!=="Erledigt"))?" open":"")+' style="--i:'+Math.min(n,8)+'"><summary><span class="c s'+ST.indexOf(i.status)+'">'+esc(i.status)+'</span><span class="wi">'+(i.wichtig?"Wichtig":"")+'</span><span class="d">'+fd(i.datum)+'</span><b class="t">'+esc(i.titel)+'</b></summary><div class="bd">'+(i.details?'<p>'+esc(i.details)+'</p>':"")+(i.kontakt?'<p>Kontakt: '+esc(i.kontakt)+'</p>':"")+(!i.details&&!i.kontakt?'<p class="d">Keine weiteren Details.</p>':"")+'</div></details>';
+const v=D.items.filter(i=>(!f.fw||i.wichtig)&&(!f.fe||i.status!=="Erledigt")&&(!f.fs||f.fs==="all"||i.status===f.fs)&&(!f.von||i.datum>=f.von)&&(!f.bis||i.datum<=f.bis)&&(!t||[i.titel,i.details,i.kontakt,fd(i.datum),i.status].join(" ").toLowerCase().includes(t))).sort(rk);
 const act=v.filter(i=>i.status!=="Erledigt"),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=v.filter(i=>i.status==="Erledigt");
 const sec=(h,a)=>a.length?"<h2>"+h+"</h2>"+a.map(card).join(""):"";
-return{head:head,kb:kb,cn:v.length+" von "+D.items.length+" Einträgen",list:v.length?sec("Das Wichtigste",imp)+sec("Offen und in Klärung",rest)+sec("Erledigt",done):'<p class="empty">Keine Einträge gefunden.</p>'}}
+const body=!v.length?'<p class="empty">'+(D.items.length?"Keine Einträge gefunden.":"Keine Einträge vorhanden.")+'</p>':so==="st"?sec("Das Wichtigste",imp)+sec("Offen und in Klärung",rest)+sec("Erledigt",done):sec(so==="alt"?"Chronologisch, älteste zuerst":"Chronologisch, neueste zuerst",v);
+return{head:head,kb:kb,sum:sum,cn:v.length+" von "+D.items.length+" Einträgen",list:body}}
 function viewer(D){
 const $=s=>document.querySelector(s);let open=false;
-function draw(){const r=ivHtml(D,{t:$("#q").value.trim(),fw:$("#fw").checked,fe:$("#fe").checked,fs:$("#fs").value,open:open});
+function draw(){const r=ivHtml(D,{t:$("#q").value.trim(),fw:$("#fw").checked,fe:$("#fe").checked,fs:$("#fs").value,so:$("#so").value,von:$("#dv").value,bis:$("#db").value,open:open});
 $("#ls").innerHTML=r.list;$("#cn").textContent=r.cn;$("#ex").textContent=open?"Alle zuklappen":"Alle aufklappen"}
-$("#q").oninput=$("#fw").onchange=$("#fe").onchange=$("#fs").onchange=draw;
+["#q","#dv","#db"].forEach(s=>$(s).oninput=draw);
+["#fw","#fe","#fs","#so"].forEach(s=>$(s).onchange=draw);
+$("#dv").onchange=$("#db").onchange=draw;
 $("#fz").oninput=e=>{document.documentElement.style.fontSize=e.target.value+"px"};
+$("#th").checked=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches;
+$("#th").onchange=e=>{document.documentElement.dataset.theme=e.target.checked?"dark":"light"};
 $("#ex").onclick=()=>{open=!open;document.querySelectorAll("#ls details").forEach(d=>d.open=open);$("#ex").textContent=open?"Alle zuklappen":"Alle aufklappen"};
+$("#rs").onclick=()=>{$("#q").value="";$("#fw").checked=$("#fe").checked=false;$("#fs").value="all";$("#so").value="st";$("#dv").value=$("#db").value="";open=false;draw()};
+window.onbeforeprint=()=>document.querySelectorAll("details").forEach(d=>d.open=true);
 }
-$("#bi").onclick=()=>{const D=JSON.stringify({meta:S.meta,items:S.items}).replace(/</g,"\\u003c"),r=ivHtml(S,{fs:"all"});
-out(`Rueckkehr-Uebersicht-interaktiv-${today()}.html`,`<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rückkehr-Übersicht (interaktiv)</title><style>${IVCSS}</style></head><body>${ivBody(r)}<script>document.documentElement.className="js";const ivHtml=${ivHtml.toString()};(${viewer.toString()})(${D})<\/script></body></html>`,"text/html")};
+function ivDoc(ia){const r=ivHtml(S,{fs:"all",openImp:!ia}),D=JSON.stringify({meta:S.meta,items:S.items}).replace(/</g,"\\u003c");
+return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rückkehr-Übersicht</title><style>${IVCSS}</style></head><body>${ivBody(r,ia)}`+(ia?`<script>document.documentElement.className="js";const ivHtml=${ivHtml.toString()};(${viewer.toString()})(${D})<\/script>`:"")+`</body></html>`}
+$("#bh").onclick=()=>out(`Rueckkehr-Uebersicht-statisch-${today()}.html`,ivDoc(false),"text/html");
+$("#bi").onclick=()=>out(`Rueckkehr-Uebersicht-interaktiv-${today()}.html`,ivDoc(true),"text/html");
 $("#bp").onclick=()=>out(`Rueckkehr-Uebersicht-${today()}.pdf`,pdf(),"application/pdf");
 $("#bm").onclick=async e=>{const t=rep().md,b=e.target;try{await navigator.clipboard.writeText(t)}catch(x){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(y){}a.remove()}
 b.textContent="Kopiert";setTimeout(()=>b.textContent="Als Markdown kopieren",1600)};
