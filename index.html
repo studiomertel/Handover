@@ -66,6 +66,7 @@ dialog .btns{margin-top:14px}
 <label class="f">Vertretung<input id="vt" placeholder="Name"></label>
 <label class="f" style="grid-column:1/-1">Einrichtung<input id="ei" placeholder="Name der Einrichtung"></label>
 <label class="f" style="grid-column:1/-1">Kontakte (Objekt, Einrichtung, weitere Personen)<textarea id="ko" placeholder="z. B. Hausmeister Herr Müller, 0123 456789"></textarea></label>
+<label class="f" style="grid-column:1/-1">Branding (erscheint unten im Bericht)<textarea id="br" placeholder="z. B. Firmenname, Adresse, Telefon, Hinweis"></textarea></label>
 </div>
 <div class="tools r" style="--i:2">
 <label class="tg"><input type="checkbox" id="fo"><span class="sw"></span>Für den Chef (ohne Erledigte)</label>
@@ -84,7 +85,7 @@ dialog .btns{margin-top:14px}
 <button class="btn" id="bl">Backup laden</button>
 </div>
 <p id="bk"></p>
-<p style="margin-top:4px;font-size:.8rem;color:var(--mute)">Version 5 (Bericht statisch und interaktiv)</p>
+<p style="margin-top:4px;font-size:.8rem;color:var(--mute)">Version 6 (Bericht statisch und interaktiv, mit Branding)</p>
 </div>
 <button class="fab" id="add">+ Neuer Eintrag</button>
 <dialog id="dlg">
@@ -103,7 +104,7 @@ dialog .btns{margin-top:14px}
 <input type="file" id="imp" accept=".json,application/json" hidden>
 <script>
 const K="rueckkehr-v1",$=s=>document.querySelector(s),ST=["Offen","In Klärung","Erledigt"];
-let S={meta:{zt:"",vt:"",ei:"",ko:"",so:"st",bk:""},items:[]},cur=null;
+let S={meta:{zt:"",vt:"",ei:"",ko:"",br:"",so:"st",bk:""},items:[]},cur=null;
 try{const r=JSON.parse(localStorage.getItem(K));if(r&&Array.isArray(r.items))S={meta:Object.assign(S.meta,r.meta),items:r.items}}catch(e){}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 try{navigator.serviceWorker&&navigator.serviceWorker.register("sw.js")}catch(e){}
@@ -136,13 +137,14 @@ $("#zt").oninput=e=>{S.meta.zt=e.target.value;save()};
 $("#vt").oninput=e=>{S.meta.vt=e.target.value;save()};
 $("#ei").oninput=e=>{S.meta.ei=e.target.value;save()};
 $("#ko").oninput=e=>{S.meta.ko=e.target.value;save()};
+$("#br").oninput=e=>{S.meta.br=e.target.value;save()};
 $("#so").onchange=e=>{S.meta.so=e.target.value;save();render()};
-const fill=()=>{$("#zt").value=S.meta.zt;$("#vt").value=S.meta.vt;$("#ei").value=S.meta.ei;$("#ko").value=S.meta.ko;$("#so").value=S.meta.so};fill();
+const fill=()=>{$("#zt").value=S.meta.zt;$("#vt").value=S.meta.vt;$("#ei").value=S.meta.ei;$("#ko").value=S.meta.ko;$("#br").value=S.meta.br||"";$("#so").value=S.meta.so};fill();
 function rep(){
 const act=S.items.filter(i=>i.status!=="Erledigt").sort(rank),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=S.items.filter(i=>i.status==="Erledigt").sort(rank);
 const md=(t,a)=>a.length?`\n## ${t}\n`+a.map(i=>`- **${i.titel}** (${i.status}, ${fd(i.datum)})${i.details?": "+i.details.replace(/\n/g," "):""}${i.kontakt?" (Kontakt: "+i.kontakt+")":""}`).join("\n")+"\n":"";
 const head=[S.meta.ei&&"Einrichtung: "+S.meta.ei,S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean);
-return{md:`# Rückkehr-Übersicht\n\n${head.join("  \n")}\n`+(S.meta.ko?`\n## Kontakte\n${S.meta.ko}\n`:"")+md("Das Wichtigste",imp)+md("Offen und in Klärung",rest)+md("Erledigt",done)}}
+return{md:`# Rückkehr-Übersicht\n\n${head.join("  \n")}\n`+(S.meta.ko?`\n## Kontakte\n${S.meta.ko}\n`:"")+md("Das Wichtigste",imp)+md("Offen und in Klärung",rest)+md("Erledigt",done)+(S.meta.br?"\n---\n"+S.meta.br+"\n":"")}}
 async function out(name,txt,type){const f=new File([txt],name,{type});
 try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==="AbortError")return}
 const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
@@ -160,6 +162,7 @@ ln("Rückkehr-Übersicht",20,1,4);
 y-=10;if(S.meta.ko){ln("Kontakte",14,1,6);ln(S.meta.ko,11,0,0);y-=14}
 const sec=(t,a)=>{if(!a.length)return;ln(t,14,1,6);a.forEach(i=>{ln(i.titel,12,1,1);ln(`${i.status}${i.wichtig?"  |  Wichtig":""}  |  ${fd(i.datum)}`,10,0,2,"0.2 0.2 0.18");if(i.details)ln(i.details,11,0,0);if(i.kontakt)ln("Kontakt: "+i.kontakt,10,0,0,"0.2 0.2 0.18");y-=10});y-=4};
 if(S.items.length){sec("Das Wichtigste",imp);sec("Offen und in Klärung",rest);sec("Erledigt",done)}else ln("Keine Einträge.",11,0,0);
+if(S.meta.br){y-=10;ln(S.meta.br,10,0,0,"0.2 0.2 0.18")}
 nl();
 const N=4+pg.length*2,ob=[];
 ob[1]="<</Type/Catalog/Pages 2 0 R>>";
@@ -215,6 +218,7 @@ details[open]>summary::after{content:"\\25BE"}
 .d{font-size:.85em;color:var(--mute);font-variant-numeric:tabular-nums}
 .bd{padding:0 14px 12px}.bd p{margin:4px 0 0;white-space:pre-wrap;font-size:.95em}
 .empty{color:var(--mute)}
+.ft{margin:32px 0 0;padding-top:12px;border-top:1px solid var(--line);color:var(--mute);font-size:.85em;white-space:pre-wrap}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){details.it,details.kb{animation:none}.sw::after{transition:none}}
 @media print{.ctl{display:none!important}body{background:#fff;color:#000}details.it,details.kb{break-inside:avoid;animation:none}}`;
@@ -226,7 +230,7 @@ const ivBody=(r,ia)=>`<div class="w"><h1>Rückkehr-Übersicht</h1><p class="m" i
 <div class="g"><label class="f">Datum von<input type="date" id="dv"></label><label class="f">Datum bis<input type="date" id="db"></label></div>
 <label class="f">Schriftgröße<input type="range" id="fz" min="14" max="24" step="1" value="16"></label>
 <label class="tg"><input type="checkbox" id="th"><span class="sw"></span>Dunkle Ansicht</label>
-<div class="g"><button id="ex">Alle aufklappen</button><button id="rs">Zurücksetzen</button></div></div>`:`<p class="d">Tippe auf einen Eintrag, um die Details zu sehen.</p>`)+`<p id="cn">${r.cn}</p><div id="ls">${r.list}</div><p class="d" style="margin-top:28px">Bericht erzeugt mit App-Version 5</p></div>`;
+<div class="g"><button id="ex">Alle aufklappen</button><button id="rs">Zurücksetzen</button></div></div>`:`<p class="d">Tippe auf einen Eintrag, um die Details zu sehen.</p>`)+`<p id="cn">${r.cn}</p><div id="ls">${r.list}</div>${r.foot?`<p class="ft">${r.foot}</p>`:""}</div>`;
 function ivHtml(D,f){
 const ST=["Offen","In Klärung","Erledigt"];
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -243,7 +247,7 @@ const v=D.items.filter(i=>(!f.fw||i.wichtig)&&(!f.fe||i.status!=="Erledigt")&&(!
 const act=v.filter(i=>i.status!=="Erledigt"),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=v.filter(i=>i.status==="Erledigt");
 const sec=(h,a)=>a.length?"<h2>"+h+"</h2>"+a.map(card).join(""):"";
 const body=!v.length?'<p class="empty">'+(D.items.length?"Keine Einträge gefunden.":"Keine Einträge vorhanden.")+'</p>':so==="st"?sec("Das Wichtigste",imp)+sec("Offen und in Klärung",rest)+sec("Erledigt",done):sec(so==="alt"?"Chronologisch, älteste zuerst":"Chronologisch, neueste zuerst",v);
-return{head:head,kb:kb,sum:sum,cn:v.length+" von "+D.items.length+" Einträgen",list:body}}
+return{head:head,kb:kb,sum:sum,foot:esc(D.meta.br||""),cn:v.length+" von "+D.items.length+" Einträgen",list:body}}
 function viewer(D){
 const $=s=>document.querySelector(s);let open=false;
 function draw(){const r=ivHtml(D,{t:$("#q").value.trim(),fw:$("#fw").checked,fe:$("#fe").checked,fs:$("#fs").value,so:$("#so").value,von:$("#dv").value,bis:$("#db").value,open:open});
@@ -270,7 +274,7 @@ $("#bl").onclick=()=>$("#imp").click();
 $("#imp").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
 try{const j=JSON.parse(await f.text());if(!Array.isArray(j.items))throw 0;
 if(!confirm(`Aktuelle Liste durch das Backup ersetzen (${j.items.length} Einträge)?`))return;
-S={meta:Object.assign({zt:"",vt:"",ei:"",ko:"",so:"st",bk:""},j.meta),items:j.items};save();fill();render()}catch(x){alert("Diese Datei ist kein gültiges Backup.")}};
+S={meta:Object.assign({zt:"",vt:"",ei:"",ko:"",br:"",so:"st",bk:""},j.meta),items:j.items};save();fill();render()}catch(x){alert("Diese Datei ist kein gültiges Backup.")}};
 render();
 </script>
 </body>
