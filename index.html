@@ -99,6 +99,7 @@ dialog .btns{margin-top:14px}
 <button class="btn" id="bl">Backup laden</button>
 </div>
 <p id="bk"></p>
+<p style="margin-top:4px;font-size:.8rem;color:var(--mute)">Version 3 (interaktiver Bericht)</p>
 </div>
 <button class="fab" id="add">+ Neuer Eintrag</button>
 <dialog id="dlg">
@@ -197,7 +198,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple
 .w{max-width:720px;margin:0 auto;padding:24px 16px 60px}
 h1{font-size:1.6em;margin:0 0 4px}h2{font-size:1.1em;margin:24px 0 10px}
 .m{color:var(--mute);margin:0 0 10px}
-.ctl{display:flex;flex-direction:column;gap:10px;margin:14px 0;padding:12px 14px;border:1px solid var(--line);border-radius:8px}
+.ctl{display:none;flex-direction:column;gap:10px;margin:14px 0;padding:12px 14px;border:1px solid var(--line);border-radius:8px}
+.js .ctl{display:flex}
 .ctl label.f{font-size:.85em;color:var(--mute)}
 input[type=search],select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:7px;padding:9px 10px;margin-top:4px}
 input[type=range]{width:100%;accent-color:var(--acc)}
@@ -226,38 +228,36 @@ summary b{flex:1 1 60%}
 .empty{color:var(--mute)}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){details.it,details.kb{animation:none}.sw::after{transition:none}}`;
-const IVBODY=`<div class="w"><h1>Rückkehr-Übersicht</h1><p class="m" id="hd"></p><div id="kb"></div>
+const ivBody=r=>`<div class="w"><h1>Rückkehr-Übersicht</h1><p class="m" id="hd">${r.head}</p><div id="kb">${r.kb}</div>
 <div class="ctl"><label class="f">Suche (Titel, Details, Kontakte, Datum)<input type="search" id="q" placeholder="Suchbegriff eingeben"></label>
 <div class="g"><label class="tg"><input type="checkbox" id="fw"><span class="sw"></span>Nur Wichtige</label><label class="tg"><input type="checkbox" id="fe"><span class="sw"></span>Erledigte ausblenden</label></div>
 <label class="f">Status<select id="fs"><option value="all">Alle</option><option>Offen</option><option>In Klärung</option><option>Erledigt</option></select></label>
 <label class="f">Schriftgröße<input type="range" id="fz" min="14" max="24" step="1" value="16"></label>
 <button id="ex">Alle aufklappen</button></div>
-<p id="cn"></p><div id="ls"></div></div>`;
-function viewer(D){
-const $=s=>document.querySelector(s),ST=["Offen","In Klärung","Erledigt"];
+<p id="cn">${r.cn}</p><div id="ls">${r.list}</div><p class="d">Bericht erzeugt mit App-Version 3</p></div>`;
+function ivHtml(D,f){
+const ST=["Offen","In Klärung","Erledigt"];
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fd=d=>d?d.split("-").reverse().join("."):"";
-const head=[D.meta.ei&&"Einrichtung: "+D.meta.ei,D.meta.zt&&"Abwesenheit: "+D.meta.zt,D.meta.vt&&"Vertretung: "+D.meta.vt].filter(Boolean);
-$("#hd").innerHTML=head.map(esc).join(" | ");
-if(D.meta.ko)$("#kb").innerHTML='<details class="kb"><summary><b>Kontakte</b></summary><div class="bd"><p>'+esc(D.meta.ko)+'</p></div></details>';
-let open=false;
+const head=[D.meta.ei&&"Einrichtung: "+D.meta.ei,D.meta.zt&&"Abwesenheit: "+D.meta.zt,D.meta.vt&&"Vertretung: "+D.meta.vt].filter(Boolean).map(esc).join(" | ");
+const kb=D.meta.ko?'<details class="kb"><summary><b>Kontakte</b></summary><div class="bd"><p>'+esc(D.meta.ko)+'</p></div></details>':"";
 const rk=(a,b)=>ST.indexOf(a.status)-ST.indexOf(b.status)||(b.wichtig?1:0)-(a.wichtig?1:0)||b.datum.localeCompare(a.datum);
-function card(i,n){return '<details class="it"'+(open?" open":"")+' style="--i:'+Math.min(n,8)+'"><summary><b>'+esc(i.titel)+'</b>'+(i.wichtig?'<span class="imp">Wichtig</span>':"")+'<span class="c s'+ST.indexOf(i.status)+'">'+esc(i.status)+'</span><span class="d">'+fd(i.datum)+'</span></summary><div class="bd">'+(i.details?'<p>'+esc(i.details)+'</p>':"")+(i.kontakt?'<p>Kontakt: '+esc(i.kontakt)+'</p>':"")+(!i.details&&!i.kontakt?'<p class="d">Keine weiteren Details.</p>':"")+'</div></details>'}
-function draw(){
-const t=$("#q").value.trim().toLowerCase(),fw=$("#fw").checked,fe=$("#fe").checked,fs=$("#fs").value;
-const v=D.items.filter(i=>(!fw||i.wichtig)&&(!fe||i.status!=="Erledigt")&&(fs==="all"||i.status===fs)&&(!t||[i.titel,i.details,i.kontakt,fd(i.datum),i.status].join(" ").toLowerCase().includes(t))).sort(rk);
+const t=(f.t||"").toLowerCase();
+const card=(i,n)=>'<details class="it"'+(f.open?" open":"")+' style="--i:'+Math.min(n,8)+'"><summary><b>'+esc(i.titel)+'</b>'+(i.wichtig?'<span class="imp">Wichtig</span>':"")+'<span class="c s'+ST.indexOf(i.status)+'">'+esc(i.status)+'</span><span class="d">'+fd(i.datum)+'</span></summary><div class="bd">'+(i.details?'<p>'+esc(i.details)+'</p>':"")+(i.kontakt?'<p>Kontakt: '+esc(i.kontakt)+'</p>':"")+(!i.details&&!i.kontakt?'<p class="d">Keine weiteren Details.</p>':"")+'</div></details>';
+const v=D.items.filter(i=>(!f.fw||i.wichtig)&&(!f.fe||i.status!=="Erledigt")&&(!f.fs||f.fs==="all"||i.status===f.fs)&&(!t||[i.titel,i.details,i.kontakt,fd(i.datum),i.status].join(" ").toLowerCase().includes(t))).sort(rk);
 const act=v.filter(i=>i.status!=="Erledigt"),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=v.filter(i=>i.status==="Erledigt");
 const sec=(h,a)=>a.length?"<h2>"+h+"</h2>"+a.map(card).join(""):"";
-$("#ls").innerHTML=v.length?sec("Das Wichtigste",imp)+sec("Offen und in Klärung",rest)+sec("Erledigt",done):'<p class="empty">Keine Einträge gefunden.</p>';
-$("#cn").textContent=v.length+" von "+D.items.length+" Einträgen";
-$("#ex").textContent=open?"Alle zuklappen":"Alle aufklappen"}
+return{head:head,kb:kb,cn:v.length+" von "+D.items.length+" Einträgen",list:v.length?sec("Das Wichtigste",imp)+sec("Offen und in Klärung",rest)+sec("Erledigt",done):'<p class="empty">Keine Einträge gefunden.</p>'}}
+function viewer(D){
+const $=s=>document.querySelector(s);let open=false;
+function draw(){const r=ivHtml(D,{t:$("#q").value.trim(),fw:$("#fw").checked,fe:$("#fe").checked,fs:$("#fs").value,open:open});
+$("#ls").innerHTML=r.list;$("#cn").textContent=r.cn;$("#ex").textContent=open?"Alle zuklappen":"Alle aufklappen"}
 $("#q").oninput=$("#fw").onchange=$("#fe").onchange=$("#fs").onchange=draw;
 $("#fz").oninput=e=>{document.documentElement.style.fontSize=e.target.value+"px"};
 $("#ex").onclick=()=>{open=!open;document.querySelectorAll("#ls details").forEach(d=>d.open=open);$("#ex").textContent=open?"Alle zuklappen":"Alle aufklappen"};
-draw();
 }
-$("#bi").onclick=()=>{const D=JSON.stringify({meta:S.meta,items:S.items}).replace(/</g,"\\u003c");
-out(`Rueckkehr-Uebersicht-interaktiv-${today()}.html`,`<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rückkehr-Übersicht (interaktiv)</title><style>${IVCSS}</style></head><body>${IVBODY}<script>(${viewer.toString()})(${D})<\/script></body></html>`,"text/html")};
+$("#bi").onclick=()=>{const D=JSON.stringify({meta:S.meta,items:S.items}).replace(/</g,"\\u003c"),r=ivHtml(S,{fs:"all"});
+out(`Rueckkehr-Uebersicht-interaktiv-${today()}.html`,`<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rückkehr-Übersicht (interaktiv)</title><style>${IVCSS}</style></head><body>${ivBody(r)}<script>document.documentElement.className="js";const ivHtml=${ivHtml.toString()};(${viewer.toString()})(${D})<\/script></body></html>`,"text/html")};
 $("#bp").onclick=()=>out(`Rueckkehr-Uebersicht-${today()}.pdf`,pdf(),"application/pdf");
 $("#bm").onclick=async e=>{const t=rep().md,b=e.target;try{await navigator.clipboard.writeText(t)}catch(x){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(y){}a.remove()}
 b.textContent="Kopiert";setTimeout(()=>b.textContent="Als Markdown kopieren",1600)};
