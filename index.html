@@ -56,7 +56,20 @@ h2.k{font-size:1rem;margin:26px 0 10px}
 .th{font-size:.76rem;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line);align-items:center}
 .tr{border-bottom:1px solid var(--line);cursor:pointer}.tr:last-child{border-bottom:0}
 .tr:active{background:var(--acc);color:var(--acc-ink)}
-.tr.w{box-shadow:inset 3px 0 0 var(--ink)}
+.tr{border-left:6px solid var(--sc,transparent)}
+.t0{--sc:var(--t0)}.t1{--sc:#A8A594}.t2{--sc:var(--c2)}.t3{--sc:#7C93A0}
+:root{--t0:#1B2A41}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--t0:#B7BFBC}}:root[data-theme="dark"]{--t0:#B7BFBC}
+.tr.w .tt b::after{content:"Wichtig";margin-left:8px;font-size:.7rem;font-weight:600;border:1px solid currentColor;border-radius:5px;padding:0 5px;vertical-align:middle}
+.g[data-g="3"]{cursor:pointer}
+.sg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.sg button{font:inherit;font-size:.88rem;min-height:40px;padding:6px 12px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--ink);cursor:pointer}
+.sg button.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+#sf{margin-bottom:12px}#sf input{margin:0 0 8px}
+#ts{position:fixed;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));max-width:520px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:8px;background:var(--ink);color:var(--bg);z-index:9;animation:sh .25s}
+#ts[hidden]{display:none}#ts button{font:inherit;font-weight:600;border:1px solid currentColor;border-radius:7px;background:transparent;color:inherit;padding:6px 12px;cursor:pointer}
+@keyframes sh{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@media (max-width:600px){#dlg{width:100%;max-width:100%;margin:auto 0 0;border-radius:12px 12px 0 0;max-height:92dvh;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));animation:sh .25s}#dlg .btns{position:sticky;bottom:-18px;background:var(--bg);padding:10px 0 4px;margin-top:10px}}
+@media (prefers-reduced-motion:reduce){#ts,#dlg{animation:none!important}}
 .tt{min-width:0}.tt small{display:block;color:var(--mute);font-size:.84rem;white-space:pre-wrap;margin-top:2px}
 .tt em{font-style:normal;color:var(--mute);font-size:.8rem}
 .tr:active small,.tr:active em,.tr:active .dt{color:var(--acc-ink)}
@@ -75,17 +88,17 @@ dialog .btns{margin-top:14px}
 @media print{body>*:not(#rep){display:none!important}#rep{display:block!important}:root{padding:0}}
 </style>
 <style id="rpcss">
-.rp{background:#B7BFBC;color:#1B2A41;font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:28px 18px;min-height:100vh;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.rp>*{max-width:720px;margin-left:auto;margin-right:auto}
-.rp h1{font-size:1.6rem;margin-top:0;margin-bottom:4px}
-.rp h2{font-size:1.1rem;margin-top:26px;margin-bottom:10px;color:#33342E}
+.rp{--w:clamp(720px,70vw,1000px);background:#B7BFBC;color:#1B2A41;font:clamp(16px,.5vw + 13px,20px)/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:clamp(28px,4vw,56px) clamp(18px,3vw,40px);min-height:100vh;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rp>*{box-sizing:border-box;max-width:var(--w);margin-left:auto;margin-right:auto}
+.rp h1{font-size:1.6em;margin-top:0;margin-bottom:4px}
+.rp h2{font-size:1.1em;margin-top:26px;margin-bottom:10px;color:#33342E}
 .rp .m{color:#33342E;margin-top:0;margin-bottom:6px;display:flex;gap:8px;flex-wrap:wrap}
-.rp article{border:1px solid #47607A;border-radius:8px;padding:12px 14px;margin-bottom:10px;animation:rpr .5s both;animation-delay:calc(var(--i)*80ms)}
-.rp h3{font-size:1rem;margin:0 0 4px}
+.rp article{border:1px solid #47607A;border-radius:8px;padding:clamp(12px,1.2vw,18px) clamp(14px,1.6vw,22px);margin-bottom:clamp(10px,1vw,14px);animation:rpr .5s both;animation-delay:calc(var(--i)*80ms)}
+.rp h3{font-size:1em;margin:0 0 4px}
 .rp article p{margin:4px 0 0;white-space:pre-wrap}
-.rp .c{background:#1B2A41;color:#B7BFBC;border-radius:5px;padding:0 7px;font-size:.8rem}
+.rp .c{background:#1B2A41;color:#B7BFBC;border-radius:5px;padding:0 7px;font-size:.8em}
 @keyframes rpr{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@media print{.rp{background:#fff;padding:0;min-height:0}.rp article{animation:none;break-inside:avoid}}
+@media print{.rp{font-size:16px;--w:720px;background:#fff;padding:0;min-height:0}.rp article{animation:none;break-inside:avoid}}
 @media (prefers-reduced-motion:reduce){.rp article{animation:none}}
 </style>
 </head>
@@ -110,6 +123,7 @@ dialog .btns{margin-top:14px}
 <label class="tg"><input type="checkbox" data-c="kon"><span class="sw"></span>Kontakt</label>
 </details>
 <div class="seg"><button id="tl" class="on">Liste</button><button id="tv">Vorschau</button></div>
+<div id="sf"><input id="q" type="search" placeholder="Suchen in Titel, Details und Kontakt" aria-label="Suchen"><div class="sg" id="qf"></div></div>
 <div id="list"></div><div id="pvw" hidden></div>
 <p id="cnt"></p>
 <h2 class="k">Ausgabe</h2>
@@ -133,7 +147,7 @@ dialog .btns{margin-top:14px}
 <label class="tg" style="margin-bottom:10px"><input type="checkbox" id="hd"><span class="sw"></span>Mit Datum</label>
 <label class="f" id="dw">Datum<input type="date" id="da"></label>
 <label class="f">Kurztitel<input id="ti" placeholder="z. B. Techniker nicht erschienen"></label>
-<label class="f">Status<select id="st"><option>Offen</option><option>In Klärung</option><option>Info</option><option>Erledigt</option><option value="">&nbsp;</option></select></label>
+<div style="font-size:.85rem;color:var(--mute);margin-bottom:10px">Status<div class="sg" id="sg"></div></div><input type="hidden" id="st">
 <label class="tg" style="margin-bottom:10px"><input type="checkbox" id="wi"><span class="sw"></span>Wichtig</label>
 <label class="tg" style="margin-bottom:10px"><input type="checkbox" id="nb"><span class="sw"></span>Nicht im Bericht (nur intern)</label>
 <label class="f">Kontakt zu diesem Eintrag (optional)<input id="kt" placeholder="z. B. Firma XY, Herr Beispiel, 0123 456789"></label>
@@ -151,14 +165,16 @@ dialog .btns{margin-top:14px}
 <button class="btn" id="fno">Abbrechen</button>
 </div>
 </dialog>
+<div id="ts" hidden><span id="tm"></span><button id="ta" type="button"></button></div>
 <div id="rep"></div>
 <input type="file" id="imp" accept=".json,application/json" hidden>
 <script>
-const K="rueckkehr-v1",$=s=>document.querySelector(s),ST=["Offen","In Klärung","Info","","Erledigt"],CL={"Offen":"s0","In Klärung":"s1","Info":"s3","Erledigt":"s2"};
-let S={meta:{zt:"",vt:"",ei:"",ko:"",so:"st",bk:""},items:[]},cur=null;
-try{const r=JSON.parse(localStorage.getItem(K));if(r&&Array.isArray(r.items))S={meta:Object.assign(S.meta,r.meta),items:r.items}}catch(e){}
+const K="rueckkehr-v1",$=s=>document.querySelector(s),STATUS=[{n:"Offen",c:"s0",sek:"rest"},{n:"In Klärung",c:"s1",sek:"rest"},{n:"Info",c:"s3",sek:"oth"},{n:"",c:"",sek:"oth"},{n:"Erledigt",c:"s2",sek:"done"}],ST=STATUS.map(x=>x.n),CL=Object.fromEntries(STATUS.map(x=>[x.n,x.c])),SEK=n=>(STATUS.find(x=>x.n===n)||{sek:"oth"}).sek;
+function migrate(d){const M={zt:"",vt:"",ei:"",ko:"",so:"st",bk:""},I={datum:"",titel:"",status:"",wichtig:false,intern:false,details:"",kontakt:""};return Object.assign({},d,{v:2,meta:Object.assign(M,d.meta),items:(d.items||[]).map((i,n)=>Object.assign({},I,i,{id:i.id||Date.now().toString(36)+n}))})}
+let S={v:2,meta:{zt:"",vt:"",ei:"",ko:"",so:"st",bk:""},items:[]},cur=null;
+try{const r=JSON.parse(localStorage.getItem(K));if(r&&Array.isArray(r.items))S=migrate(r)}catch(e){}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
-try{navigator.serviceWorker&&navigator.serviceWorker.register("sw.js")}catch(e){}
+try{if(navigator.serviceWorker){const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register("sw.js").then(r=>r.update&&r.update()).catch(()=>{});navigator.serviceWorker.addEventListener("controllerchange",()=>{if(had)toast("Neue Version verfügbar",{t:"Neu laden",f:()=>location.reload()},0)})}}catch(e){}
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){alert("Speichern nicht möglich. Bitte sofort ein Backup sichern.")}};
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fd=d=>d?d.split("-").reverse().join("."):"";
@@ -167,7 +183,7 @@ const rank0=(a,b)=>ST.indexOf(a.status)-ST.indexOf(b.status)||(b.wichtig?1:0)-(a
 const rank=(a,b)=>S.meta.so==="man"?0:S.meta.so==="alt"?(a.datum||"").localeCompare(b.datum||""):S.meta.so==="neu"?(b.datum||"").localeCompare(a.datum||""):rank0(a,b);
 const und=a=>S.meta.so==="man"?a:a.sort((x,y)=>(!y.datum)-(!x.datum));
 const C=()=>S.meta.cols||(S.meta.cols={sta:1,dat:1,det:1,kon:1});
-const vis=()=>S.items.filter(i=>!($("#fo").checked&&i.status==="Erledigt")&&!($("#fw").checked&&!i.wichtig));
+const vis=()=>S.items.filter(i=>!($("#fo").checked&&SEK(i.status)==="done")&&!($("#fw").checked&&!i.wichtig));
 const rp=()=>vis().filter(i=>!i.intern);
 const smy=p=>[p.imp.length&&p.imp.length+" wichtig",p.rest.length&&p.rest.length+(p.imp.length?" weitere offen":" offen"),p.oth.length&&p.oth.length+" sonstige",p.done.length&&p.done.length+" erledigt"].filter(Boolean).join(" · ");
 let V="l";
@@ -175,19 +191,25 @@ const tab=v=>{V=v;$("#tl").classList.toggle("on",v==="l");$("#tv").classList.tog
 let VIS=[];
 function mv(id,d){const k=VIS.findIndex(x=>x.id===id),nb=VIS[k+d];if(!nb)return;const a=S.items.indexOf(VIS[k]),b=S.items.indexOf(nb);[S.items[a],S.items[b]]=[S.items[b],S.items[a]];save();render()}
 function render(){
-const c=C(),v=vis().sort(rank);und(v);
+const c=C(),mt=i=>(!Q.s||i.status===Q.s)&&(!Q.t||[i.titel,i.details,i.kontakt].join(" ").toLowerCase().includes(Q.t)),v=vis().filter(mt).sort(rank);und(v);
+const st=S.meta.so==="st",NM=["Das Wichtigste","Offen und in Klärung","Infos und weitere Einträge","Erledigt"],sc=i=>SEK(i.status)==="done"?3:i.wichtig?0:SEK(i.status)==="rest"?1:2,o3=OPEN3||Q.s==="Erledigt"||!!Q.t;
+if(st)v.sort((a,b)=>sc(a)-sc(b));
+const cnt=[0,0,0,0];v.forEach(i=>cnt[sc(i)]++);
+const shown=st&&!o3?v.filter(i=>sc(i)<3):v;
+const GH=(i,n)=>st?((n===0||sc(shown[n-1])!==sc(i))?`<div class="g" data-g="${sc(i)}">${NM[sc(i)]} (${cnt[sc(i)]})${sc(i)===3?" ▾":""}</div>`:""):(both&&(n===0||!shown[n-1].datum!==!i.datum)?`<div class="g">${i.datum?"Mit Datum":"Allgemeine Infos"}</div>`:"");
+const tail=st&&!o3&&cnt[3]?`<div class="g" data-g="3">${NM[3]} (${cnt[3]}) ▸</div>`:"";
 const man=S.meta.so==="man",both=!man&&v.some(x=>!x.datum)&&v.some(x=>x.datum),g="grid-template-columns:1fr"+(c.sta?" 96px":"")+(c.dat?" 88px":"");
-$("#list").innerHTML=v.length?`<div class="tb"><div class="th" style="${g}"><span>Titel</span>${c.sta?"<span>Status</span>":""}${c.dat?"<span>Datum</span>":""}</div>`+v.map((i,n)=>`${both&&(n===0||!v[n-1].datum!==!i.datum)?`<div class="g">${i.datum?"Mit Datum":"Allgemeine Infos"}</div>`:""}<div class="tr${i.wichtig?" w":""}" data-id="${i.id}" style="${g}"><div class="tt"><b>${esc(i.titel)}</b>${i.intern?"<em> · nicht im Bericht</em>":""}${c.det&&i.details?`<small>${esc(i.details)}</small>`:""}${c.kon&&i.kontakt?`<small>Kontakt: ${esc(i.kontakt)}</small>`:""}${man?`<span class="mv"><button data-mv="${i.id}" data-d="-1" aria-label="nach oben">▲</button><button data-mv="${i.id}" data-d="1" aria-label="nach unten">▼</button></span>`:""}</div>${c.sta?`<span>${i.status?`<span class="chip ${CL[i.status]||"s0"}">${esc(i.status)}</span>`:""}</span>`:""}${c.dat?`<span class="dt">${fd(i.datum)}</span>`:""}</div>`).join("")+"</div>":`<p class="empty">Keine Einträge. Tippe auf „Neuer Eintrag“.</p>`;
+$("#list").innerHTML=v.length?`<div class="tb"><div class="th" style="${g}"><span>Titel</span>${c.sta?"<span>Status</span>":""}${c.dat?"<span>Datum</span>":""}</div>`+shown.map((i,n)=>`${GH(i,n)}<div class="tr${i.wichtig?" w":""}${CL[i.status]?" "+CL[i.status].replace("s","t"):""}" data-id="${i.id}" style="${g}"><div class="tt"><b>${esc(i.titel)}</b>${i.intern?"<em> · nicht im Bericht</em>":""}${c.det&&i.details?`<small>${esc(i.details)}</small>`:""}${c.kon&&i.kontakt?`<small>Kontakt: ${esc(i.kontakt)}</small>`:""}${man?`<span class="mv"><button data-mv="${i.id}" data-d="-1" aria-label="nach oben">▲</button><button data-mv="${i.id}" data-d="1" aria-label="nach unten">▼</button></span>`:""}</div>${c.sta?`<span>${i.status?`<span class="chip ${CL[i.status]||"s0"}">${esc(i.status)}</span>`:""}</span>`:""}${c.dat?`<span class="dt">${fd(i.datum)}</span>`:""}</div>`).join("")+tail+"</div>":`<p class="empty">Keine Einträge. Tippe auf „Neuer Eintrag“.</p>`;
 VIS=v;$("#cnt").textContent=`${v.length} von ${S.items.length} Einträgen`;
 const b=S.meta.bk;$("#bk").textContent=b?`Letztes Backup: ${fd(b)}${(Date.now()-new Date(b))/864e5>7?" (älter als 7 Tage, bitte erneuern)":""}`:"Noch kein Backup gespeichert. Bitte regelmäßig sichern.";
-$("#list").hidden=V==="v";$("#pvw").hidden=V!=="v";if(V==="v")$("#pvw").innerHTML=`<div class="rp">${rep().html}</div>`;
+$("#list").hidden=V==="v";$("#sf").hidden=V==="v";$("#pvw").hidden=V!=="v";if(V==="v")$("#pvw").innerHTML=`<div class="rp">${rep().html}</div>`;
 }
 const dw=()=>{$("#dw").style.display=$("#hd").checked?"":"none"};
 $("#hd").onchange=()=>{dw();if($("#hd").checked&&!$("#da").value)$("#da").value=today()};
 function openD(id){cur=id;const i=S.items.find(x=>x.id===id)||{datum:"",titel:"",status:"Offen",wichtig:false,details:""};
-$("#hd").checked=!!i.datum;$("#da").value=i.datum||today();dw();$("#ti").value=i.titel;$("#st").value=i.status||"";$("#wi").checked=!!i.wichtig;$("#nb").checked=!!i.intern;$("#de").value=i.details||"";$("#kt").value=i.kontakt||"";$("#del").hidden=!id;$("#dlg").showModal()}
+$("#hd").checked=!!i.datum;$("#da").value=i.datum||today();dw();$("#ti").value=i.titel;setSt(i.status||"");$("#wi").checked=!!i.wichtig;$("#nb").checked=!!i.intern;$("#de").value=i.details||"";$("#kt").value=i.kontakt||"";$("#del").hidden=!id;$("#dlg").showModal()}
 $("#add").onclick=()=>openD(null);
-$("#list").onclick=e=>{const m=e.target.closest("[data-mv]");if(m){mv(m.dataset.mv,+m.dataset.d);return}const r=e.target.closest(".tr");if(r)openD(r.dataset.id)};
+$("#list").onclick=e=>{const g=e.target.closest('.g[data-g="3"]');if(g){OPEN3=!OPEN3;render();return}const m=e.target.closest("[data-mv]");if(m){mv(m.dataset.mv,+m.dataset.d);return}const r=e.target.closest(".tr");if(r)openD(r.dataset.id)};
 $("#tl").onclick=()=>tab("l");$("#tv").onclick=()=>tab("v");
 $("#pvw").onclick=e=>{const a=e.target.closest("article[data-id]");if(a)openD(a.dataset.id)};
 document.querySelectorAll("[data-c]").forEach(x=>x.onchange=()=>{C()[x.dataset.c]=x.checked?1:0;save();render()});
@@ -196,7 +218,7 @@ $("#ok").onclick=()=>{const t=$("#ti").value.trim();if(!t){$("#ti").focus();retu
 const o={datum:$("#hd").checked?($("#da").value||today()):"",titel:t,status:$("#st").value,wichtig:$("#wi").checked,intern:$("#nb").checked,details:$("#de").value.trim(),kontakt:$("#kt").value.trim()};
 if(cur)Object.assign(S.items.find(x=>x.id===cur),o);else S.items.push(Object.assign({id:Date.now().toString(36)},o));
 save();render();$("#dlg").close()};
-$("#del").onclick=()=>{if(confirm("Eintrag löschen?")){S.items=S.items.filter(x=>x.id!==cur);save();render();$("#dlg").close()}};
+$("#del").onclick=()=>{const k=S.items.findIndex(x=>x.id===cur);if(k<0)return;const it=S.items.splice(k,1)[0];save();render();$("#dlg").close();toast("Eintrag gelöscht",{t:"Rückgängig",f:()=>{S.items.splice(Math.min(k,S.items.length),0,it);save();render()}})};
 $("#fo").onchange=$("#fw").onchange=render;
 $("#zt").oninput=e=>{S.meta.zt=e.target.value;save()};
 $("#vt").oninput=e=>{S.meta.vt=e.target.value;save()};
@@ -207,8 +229,8 @@ const fill=()=>{$("#zt").value=S.meta.zt;$("#vt").value=S.meta.vt;$("#ei").value
 const lines=s=>String(s||"").split("\n").map(x=>x.trim()).filter(Boolean);
 const meta=(i,t)=>[i.datum&&fd(i.datum),i.status,i.wichtig&&t!=="Das Wichtigste"&&"Wichtig"].filter(Boolean).join(" · ");
 function parts(){
-const all=und(rp().filter(i=>i.status!=="Erledigt").sort(rank));
-return{imp:all.filter(i=>i.wichtig),rest:all.filter(i=>!i.wichtig&&(i.status==="Offen"||i.status==="In Klärung")),oth:all.filter(i=>!i.wichtig&&i.status!=="Offen"&&i.status!=="In Klärung"),done:und(rp().filter(i=>i.status==="Erledigt").sort(rank)),n:all.length}}
+const all=und(rp().filter(i=>SEK(i.status)!=="done").sort(rank));
+return{imp:all.filter(i=>i.wichtig),rest:all.filter(i=>!i.wichtig&&SEK(i.status)==="rest"),oth:all.filter(i=>!i.wichtig&&SEK(i.status)==="oth"),done:und(rp().filter(i=>SEK(i.status)==="done").sort(rank)),n:all.length}}
 function rep(){
 const p=parts(),SC=[["Das Wichtigste",p.imp],["Offen und in Klärung",p.rest],["Infos und weitere Einträge",p.oth],["Erledigt",p.done]],has=p.n+p.done.length>0,
 H=[["Einrichtung",S.meta.ei],["Abwesenheit",S.meta.zt],["Vertretung",S.meta.vt]].filter(x=>x[1]),sm=smy(p);
@@ -285,7 +307,15 @@ $("#bl").onclick=()=>$("#imp").click();
 $("#imp").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
 try{const j=JSON.parse(await f.text());if(!Array.isArray(j.items))throw 0;
 if(!confirm(`Aktuelle Liste durch das Backup ersetzen (${j.items.length} Einträge)?`))return;
-S={meta:Object.assign({zt:"",vt:"",ei:"",ko:"",so:"st",bk:""},j.meta),items:j.items};save();fill();render()}catch(x){alert("Diese Datei ist kein gültiges Backup.")}};
+S=migrate(j);save();fill();render()}catch(x){alert("Diese Datei ist kein gültiges Backup.")}};
+function toast(m,a,ms){ms=ms===undefined?6000:ms;const t=$("#ts"),b=$("#ta");$("#tm").textContent=m;b.hidden=!a;if(a){b.textContent=a.t;b.onclick=()=>{t.hidden=true;a.f()}}t.hidden=false;clearTimeout(toast.h);if(ms)toast.h=setTimeout(()=>t.hidden=true,ms)}
+$("#sg").innerHTML=STATUS.map(x=>`<button type="button" data-v="${esc(x.n)}"${x.n?"":' aria-label="Kein Status"'}>${esc(x.n)||"–"}</button>`).join("");
+function setSt(v){$("#st").value=v;document.querySelectorAll("#sg button").forEach(b=>{const on=b.dataset.v===v;b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)})}
+$("#sg").onclick=e=>{const b=e.target.closest("button");if(b)setSt(b.dataset.v)};
+let Q={t:"",s:null},OPEN3=false;
+$("#qf").innerHTML='<button type="button" class="on" data-s="">Alle</button>'+STATUS.filter(x=>x.n).map(x=>`<button type="button" data-s="${esc(x.n)}">${esc(x.n)}</button>`).join("");
+$("#qf").onclick=e=>{const b=e.target.closest("button");if(!b)return;Q.s=b.dataset.s||null;document.querySelectorAll("#qf button").forEach(x=>x.classList.toggle("on",x===b));render()};
+$("#q").oninput=e=>{Q.t=e.target.value.trim().toLowerCase();render()};
 render();
 </script>
 </body>
