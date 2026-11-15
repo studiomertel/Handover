@@ -144,6 +144,13 @@ dialog .btns{margin-top:14px}
 <button class="btn" id="del" style="grid-column:1/-1">Eintrag löschen</button>
 </div>
 </dialog>
+<dialog id="fn">
+<label class="f">Dateiname (die Endung <span id="fne"></span> wird automatisch ergänzt)<input id="fni" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+<div class="btns">
+<button class="btn p" id="fok">Weiter</button>
+<button class="btn" id="fno">Abbrechen</button>
+</div>
+</dialog>
 <div id="rep"></div>
 <input type="file" id="imp" accept=".json,application/json" hidden>
 <script>
@@ -215,10 +222,14 @@ if(S.meta.ko){md.push("## Kontakte\n\n"+lines(S.meta.ko).map(x=>"- "+x).join("\n
 SC.forEach(([t,a])=>{if(a.length){md.push("## "+t+"\n\n"+a.map(i=>mi(i,t)).join("\n\n"));tx.push(t.toUpperCase()+"\n"+a.map(i=>ti(i,t)).join("\n\n"))}});
 if(!has){md.push("Keine Einträge.");tx.push("Keine Einträge.")}
 return{html:`<h1>Rückkehr-Übersicht</h1><p class="m">${H.map(x=>esc(x[0]+": "+x[1])).join(" | ")}</p>${sm?`<p class="m">${sm}</p>`:""}`+(S.meta.ko?`<h2>Kontakte</h2><article style="--i:0"><p>${esc(S.meta.ko)}</p></article>`:"")+(has?SC.map(x=>sec(x[0],x[1])).join(""):"<p>Keine Einträge.</p>"),md:md.join("\n\n")+"\n",txt:tx.join("\n\n")+"\n"}}
+function askName(n,ext){return new Promise(res=>{const d=$("#fn"),i=$("#fni");i.value=n;$("#fne").textContent="."+ext;
+const fin=()=>{const v=i.value.replace(new RegExp("\\."+ext+"$","i"),"").replace(/[\\\/:*?"<>|]+/g,"").trim()||n;res(v);d.close()};
+$("#fok").onclick=fin;$("#fno").onclick=()=>d.close();i.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();fin()}};
+d.onclose=()=>res(null);d.showModal();i.focus();i.select()})}
 async function out(name,txt,type){const f=new File([txt],name,{type});
 try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==="AbortError")return}
 const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
-$("#bh").onclick=()=>out(`Rueckkehr-Uebersicht-${today()}.html`,`<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rückkehr-Übersicht</title><style>body{margin:0}${$("#rpcss").textContent}</style></head><body><div class="rp">${rep().html}</div></body></html>`,"text/html");
+$("#bh").onclick=async()=>{const n=await askName(`Rueckkehr-Uebersicht-${today()}`,"html");if(n==null)return;await out(n+".html",`<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rückkehr-Übersicht</title><style>body{margin:0}${$("#rpcss").textContent}</style></head><body><div class="rp">${rep().html}</div></body></html>`,"text/html")};
 function pdf(){
 const W=595,H=842,M=56,CW=W-2*M,INK="0.106 0.165 0.255",GR="0.2 0.2 0.18",WM={"€":128,"„":132,"…":133,"‘":145,"’":146,"“":147,"”":148,"•":149,"–":150,"—":151};
 const WR=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
@@ -269,7 +280,7 @@ if(sa)hint("Erscheint kein Druckfenster, blockiert iOS es in der Home-Bildschirm
 try{window.print()}catch(e){hint("Der Druckdialog ist hier nicht verfügbar. Nutze „Bericht als PDF“.")}};
 $("#bt").onclick=e=>flash(e.target,rep().txt);
 $("#bm").onclick=e=>flash(e.target,rep().md);
-$("#bb").onclick=async()=>{await out(`Rueckkehr-Backup-${today()}.json`,JSON.stringify(S,null,1),"application/json");S.meta.bk=today();save();render()};
+$("#bb").onclick=async()=>{const n=await askName(`Rueckkehr-Backup-${today()}`,"json");if(n==null)return;await out(n+".json",JSON.stringify(S,null,1),"application/json");S.meta.bk=today();save();render()};
 $("#bl").onclick=()=>$("#imp").click();
 $("#imp").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
 try{const j=JSON.parse(await f.text());if(!Array.isArray(j.items))throw 0;
