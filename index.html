@@ -39,9 +39,9 @@ textarea{min-height:96px;resize:vertical}
 .top{display:flex;justify-content:space-between;gap:8px}
 .sub{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:.85rem;color:var(--mute)}
 .chip{display:inline-block;min-width:6.6em;text-align:center;border:1px solid var(--ink);border-radius:5px;padding:1px 8px;font-size:.8rem;color:var(--ink)}
-.chip.s1{border-color:transparent;background:#A8A594;color:#1B2A41}.chip.s2{border-style:dashed;border-color:var(--mute);color:var(--mute)}.chip.s3{border-color:transparent;background:#A8ACA6;color:#45473E}
-@media (prefers-color-scheme:dark){.chip.s1{background:#5C6E3C;color:#B7BFBC}.chip.s3{background:#45473E;color:#A8ACA6}}
-.imp{font-size:.78rem;border:1px solid var(--ink);border-radius:5px;padding:0 6px;height:fit-content}
+.chip.s1{border-color:transparent;background:#A8A594;color:#1B2A41}.chip.s2{border-color:transparent;background:#7C93A0;color:#1B2A41}.chip.s3{border-color:transparent;background:#A8ACA6;color:#45473E}
+@media (prefers-color-scheme:dark){.chip.s1{background:#5C6E3C;color:#B7BFBC}.chip.s2{background:#47607A;color:#B7BFBC}.chip.s3{background:#45473E;color:#A8ACA6}}
+.imp{font-size:.78rem;font-weight:700;background:var(--ink);color:var(--bg);border:1px solid var(--ink);border-radius:5px;padding:0 7px;height:fit-content}
 .mv{display:flex;gap:6px;margin-left:auto}
 .mv button{font:inherit;width:44px;height:36px;border:1px solid var(--line);border-radius:7px;background:transparent;color:inherit;cursor:pointer}
 .empty,#cnt,#bk{color:var(--mute);font-size:.9rem}
@@ -56,7 +56,6 @@ h2.k{font-size:1rem;margin:26px 0 10px}
 dialog{width:min(94vw,520px);border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:18px}
 dialog::backdrop{background:rgba(27,42,65,.6)}
 dialog .btns{margin-top:14px}
-dialog .hint{font-size:.82rem;color:var(--mute);margin:0 0 6px}
 </style>
 </head>
 <body>
@@ -86,7 +85,7 @@ dialog .hint{font-size:.82rem;color:var(--mute);margin:0 0 6px}
 <button class="btn" id="bl">Backup laden</button>
 </div>
 <p id="bk"></p>
-<p style="margin-top:4px;font-size:.8rem;color:var(--mute)">Version 7 (Titel vor der Ausgabe wählbar, überarbeiteter Bericht)</p>
+<p style="margin-top:4px;font-size:.8rem;color:var(--mute)">Version 7 (Schnellfilter, deutlichere Wichtig-Markierung, skalierbare Breite)</p>
 </div>
 <button class="fab" id="add">+ Neuer Eintrag</button>
 <dialog id="dlg">
@@ -102,17 +101,12 @@ dialog .hint{font-size:.82rem;color:var(--mute);margin:0 0 6px}
 <button class="btn" id="del" style="grid-column:1/-1">Eintrag löschen</button>
 </div>
 </dialog>
-<dialog id="tdlg">
-<label class="f">Titel des Berichts<input id="tt" placeholder="Rückkehr-Übersicht" maxlength="80"></label>
-<p class="hint">Erscheint als Überschrift im Bericht, im E-Mail-Betreff und im Dateinamen.</p>
-<div class="btns"><button class="btn p" id="tok">Weiter</button><button class="btn" id="tno">Abbrechen</button></div>
-</dialog>
 <input type="file" id="imp" accept=".json,application/json" hidden>
 <script>
 const K="rueckkehr-v1",$=s=>document.querySelector(s),ST=["Offen","In Klärung","Info","Erledigt"];
-let S={meta:{zt:"",vt:"",ei:"",ko:"",br:"",so:"st",bk:"",ti:""},items:[]},cur=null;
-const norm=i=>Object.assign({},i,{status:ST.indexOf(i.status)<0?"Info":i.status,datum:i.datum||""});
-try{const r=JSON.parse(localStorage.getItem(K));if(r&&Array.isArray(r.items))S={meta:Object.assign(S.meta,r.meta),items:r.items.map(norm)}}catch(e){}
+let S={meta:{zt:"",vt:"",ei:"",ko:"",br:"",so:"st",bk:""},items:[]},cur=null;
+try{const r=JSON.parse(localStorage.getItem(K));if(r&&Array.isArray(r.items))S={meta:Object.assign(S.meta,r.meta),items:r.items}}catch(e){}
+S.items.forEach(i=>{if(!ST.includes(i.status))i.status="Info";if(i.datum==null)i.datum=""});
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 try{navigator.serviceWorker&&navigator.serviceWorker.register("sw.js")}catch(e){}
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){alert("Speichern nicht möglich. Bitte sofort ein Backup sichern.")}};
@@ -147,46 +141,30 @@ $("#ko").oninput=e=>{S.meta.ko=e.target.value;save()};
 $("#br").oninput=e=>{S.meta.br=e.target.value;save()};
 $("#so").onchange=e=>{S.meta.so=e.target.value;save();render()};
 const fill=()=>{$("#zt").value=S.meta.zt;$("#vt").value=S.meta.vt;$("#ei").value=S.meta.ei;$("#ko").value=S.meta.ko;$("#br").value=S.meta.br||"";$("#so").value=S.meta.so};fill();
-const DT="Rückkehr-Übersicht";
-const LN=t=>String(t||"").split("\n").map(x=>x.replace(/^\s*(•|-\s|\*\s)\s*/,"").trim()).filter(Boolean);
-const sl=t=>String(t).replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/Ä/g,"Ae").replace(/Ö/g,"Oe").replace(/Ü/g,"Ue").replace(/ß/g,"ss").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||"Bericht";
-const groups=()=>{const act=S.items.filter(i=>i.status!=="Erledigt").sort(rank);return{imp:act.filter(i=>i.wichtig),rest:act.filter(i=>!i.wichtig&&i.status!=="Info"),inf:act.filter(i=>!i.wichtig&&i.status==="Info"),done:S.items.filter(i=>i.status==="Erledigt").sort(rank)}};
-const sumTxt=()=>{const c=ST.map(s=>S.items.filter(i=>i.status===s).length),w=S.items.filter(i=>i.wichtig&&i.status!=="Erledigt").length;return S.items.length?`${w} wichtig · ${c[0]} offen · ${c[1]} in Klärung · ${c[2]} Info · ${c[3]} erledigt`:""};
-const heads=()=>[["Einrichtung",S.meta.ei],["Abwesenheit",S.meta.zt],["Vertretung",S.meta.vt]].filter(x=>x[1]&&String(x[1]).trim());
 function rep(){
-const T=S.meta.ti||DT,g=groups();
-const md=(t,a)=>a.length?`\n## ${t}\n\n`+a.map(i=>`- **${i.titel}**${i.wichtig?" (wichtig)":""} · ${i.status}${i.datum?" · "+fd(i.datum):""}`+LN(i.details).map(x=>`\n  - ${x}`).join("")+(i.kontakt?`\n  - Kontakt: ${i.kontakt}`:"")).join("\n")+"\n":"";
-return{md:`# ${T}\n\n`+heads().map(x=>`**${x[0]}:** ${String(x[1]).trim()}`).join("  \n")+"\n"+(sumTxt()?`\n*${sumTxt()}*\n`:"")+(S.meta.ko?`\n## Kontakte\n\n${S.meta.ko}\n`:"")+md("Das Wichtigste",g.imp)+md("Offen und in Klärung",g.rest)+md("Zur Information",g.inf)+md("Erledigt",g.done)+(S.meta.br?"\n---\n\n"+S.meta.br.trim()+"\n":"")}}
-async function out(name,txt,type,ti){const f=new File([txt],name,{type});
-try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:ti||name});return}}catch(e){if(e.name==="AbortError")return}
+const act=S.items.filter(i=>i.status!=="Erledigt").sort(rank),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=S.items.filter(i=>i.status==="Erledigt").sort(rank);
+const md=(t,a)=>a.length?`\n## ${t}\n`+a.map(i=>`- **${i.titel}** (${i.status}, ${fd(i.datum)})${i.details?": "+i.details.replace(/\n/g," "):""}${i.kontakt?" (Kontakt: "+i.kontakt+")":""}`).join("\n")+"\n":"";
+const head=[S.meta.ei&&"Einrichtung: "+S.meta.ei,S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean);
+return{md:`# Rückkehr-Übersicht\n\n${head.join("  \n")}\n`+(S.meta.ko?`\n## Kontakte\n${S.meta.ko}\n`:"")+md("Das Wichtigste",imp)+md("Offen, in Klärung und Info",rest)+md("Erledigt",done)+(S.meta.br?"\n---\n"+S.meta.br+"\n":"")}}
+async function out(name,txt,type){const f=new File([txt],name,{type});
+try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==="AbortError")return}
 const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
-let pend=null;
-function ask(fn){pend=fn;$("#tt").value=S.meta.ti||DT;$("#tdlg").showModal();$("#tt").select()}
-$("#tok").onclick=()=>{const t=$("#tt").value.trim()||DT,f=pend;pend=null;S.meta.ti=t;save();$("#tdlg").close();if(f)f(t)};
-$("#tno").onclick=()=>{pend=null;$("#tdlg").close()};
-$("#tt").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();$("#tok").click()}};
 function pdf(){
-const T=S.meta.ti||DT,W=595,H=842,M=56,CW=W-2*M,WM={"€":128,"„":132,"…":133,"‘":145,"’":146,"“":147,"”":148,"•":149,"–":150,"—":151};
+const W=595,H=842,M=56,CW=W-2*M,WM={"€":128,"„":132,"…":133,"‘":145,"’":146,"“":147,"”":148,"•":149,"–":150,"—":151};
 const enc=s=>[...String(s)].map(c=>{const k=c.charCodeAt(0);return WM[c]?String.fromCharCode(WM[c]):(k>=32&&k<256&&!(k>126&&k<160))?c:" "}).join("");
 const pe=s=>enc(s).replace(/[\\()]/g,"\\$&");
 let pg=[],cu=[],y=H-M;
 const nl=()=>{pg.push(cu.join("\n"));cu=[];y=H-M};
 const wrap=(t,sz)=>{const n=Math.floor(CW/(sz*.55)),o=[];String(t).split("\n").forEach(p=>{let l="";p.split(" ").forEach(w=>{while(w.length>n){if(l){o.push(l);l=""}o.push(w.slice(0,n));w=w.slice(n)}if((l+" "+w).trim().length>n){o.push(l);l=w}else l=(l+" "+w).trim()});o.push(l)});return o};
 const ln=(t,sz,b,gap,col)=>{wrap(t,sz).forEach(x=>{if(y-sz<M)nl();cu.push(`BT /F${b?2:1} ${sz} Tf ${col||"0.106 0.165 0.255"} rg ${M} ${y-sz} Td (${pe(x)}) Tj ET`);y-=sz*1.25});y-=gap};
-const rule=()=>{cu.push(`0.58 0.59 0.54 RG 0.6 w ${M} ${y} m ${W-M} ${y} l S`)};
-const g=groups(),gr="0.2 0.2 0.18";
-ln(T,20,1,6);
-heads().forEach(x=>ln(x[0]+": "+String(x[1]).trim(),11,0,0,gr));
-y-=6;rule();y-=12;
-if(sumTxt()){ln(sumTxt(),11,1,4);y-=6}
-if(S.meta.ko){ln("Kontakte",13,1,2);rule();y-=8;ln(S.meta.ko,11,0,0);y-=14}
-const sec=(t,a)=>{if(!a.length)return;if(y<M+80)nl();ln(`${t} (${a.length})`,13,1,2);rule();y-=8;
-a.forEach(i=>{if(y<M+70)nl();ln(i.titel,12,1,1);ln([i.status,i.wichtig&&"Wichtig",i.datum&&fd(i.datum)].filter(Boolean).join("  |  "),10,0,2,gr);
-if(i.details)ln(LN(i.details).map(x=>"• "+x).join("\n"),11,0,0);if(i.kontakt)ln("Kontakt: "+i.kontakt,10,0,0,gr);y-=10});y-=6};
-if(S.items.length){sec("Das Wichtigste",g.imp);sec("Offen und in Klärung",g.rest);sec("Zur Information",g.inf);sec("Erledigt",g.done)}else ln("Keine Einträge.",11,0,0);
-if(S.meta.br&&S.meta.br.trim()){if(y<M+60)nl();y-=8;rule();y-=10;ln(S.meta.br.trim(),10,0,0,gr)}
+const act=S.items.filter(i=>i.status!=="Erledigt").sort(rank),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=S.items.filter(i=>i.status==="Erledigt").sort(rank);
+ln("Rückkehr-Übersicht",20,1,4);
+[S.meta.ei&&"Einrichtung: "+S.meta.ei,S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean).forEach(t=>ln(t,11,0,0,"0.2 0.2 0.18"));
+y-=10;if(S.meta.ko){ln("Kontakte",14,1,6);ln(S.meta.ko,11,0,0);y-=14}
+const sec=(t,a)=>{if(!a.length)return;ln(t,14,1,6);a.forEach(i=>{ln(i.titel,12,1,1);ln(`${i.status}${i.wichtig?"  |  Wichtig":""}  |  ${fd(i.datum)}`,10,0,2,"0.2 0.2 0.18");if(i.details)ln(i.details,11,0,0);if(i.kontakt)ln("Kontakt: "+i.kontakt,10,0,0,"0.2 0.2 0.18");y-=10});y-=4};
+if(S.items.length){sec("Das Wichtigste",imp);sec("Offen, in Klärung und Info",rest);sec("Erledigt",done)}else ln("Keine Einträge.",11,0,0);
+if(S.meta.br){y-=10;ln(S.meta.br,10,0,0,"0.2 0.2 0.18")}
 nl();
-const tot=pg.length;pg=pg.map((c,i)=>c+`\nBT /F1 9 Tf 0.28 0.29 0.25 rg ${M} 30 Td (Seite ${i+1} von ${tot}) Tj ET`);
 const N=4+pg.length*2,ob=[];
 ob[1]="<</Type/Catalog/Pages 2 0 R>>";
 ob[2]=`<</Type/Pages/Kids [${pg.map((_,i)=>`${5+2*i} 0 R`).join(" ")}]/Count ${pg.length}>>`;
@@ -198,33 +176,22 @@ for(let k=1;k<=N;k++){off[k]=o.length;o+=`${k} 0 obj\n${ob[k]}\nendobj\n`}
 const xr=o.length;
 o+=`xref\n0 ${N+1}\n0000000000 65535 f \n`+off.slice(1).map(v=>String(v).padStart(10,"0")+" 00000 n \n").join("")+`trailer\n<</Size ${N+1}/Root 1 0 R>>\nstartxref\n${xr}\n%%EOF`;
 return Uint8Array.from(o,c=>c.charCodeAt(0)&255)}
-const IVL="--bg:#B7BFBC;--ink:#1B2A41;--mute:#45473E;--line:#93958A;--acc:#3A431F;--ai:#B7BFBC;--c1:#A8A594;--c1t:#1B2A41;--c2:#A8ACA6;--c2t:#45473E;--w:#3A431F;--wt:#B7BFBC";
-const IVD="--bg:#33342E;--ink:#B7BFBC;--mute:#A8ACA6;--line:#45473E;--acc:#94A37E;--ai:#1B2A41;--c1:#5C6E3C;--c1t:#B7BFBC;--c2:#45473E;--c2t:#A8ACA6;--w:#94A37E;--wt:#1B2A41";
+const IVL="--bg:#B7BFBC;--ink:#1B2A41;--mute:#45473E;--line:#93958A;--acc:#3A431F;--ai:#B7BFBC;--c1:#A8A594;--c1t:#1B2A41;--c2:#A8ACA6;--c2t:#45473E;--ci:#7C93A0;--cit:#1B2A41;--w:#1B2A41;--wt:#B7BFBC";
+const IVD="--bg:#33342E;--ink:#B7BFBC;--mute:#A8ACA6;--line:#45473E;--acc:#94A37E;--ai:#1B2A41;--c1:#5C6E3C;--c1t:#B7BFBC;--c2:#45473E;--c2t:#A8ACA6;--ci:#47607A;--cit:#B7BFBC;--w:#B7BFBC;--wt:#1B2A41";
 const IVCSS=`:root{${IVL};color-scheme:light}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${IVD};color-scheme:dark}}
 :root[data-theme="dark"]{${IVD};color-scheme:dark}
 *{box-sizing:border-box}html{font-size:16px}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;-webkit-text-size-adjust:100%}
-.w{max-width:720px;margin:0 auto;padding:28px 16px 64px}
-h1{font-size:1.6em;line-height:1.2;margin:0 0 14px;font-weight:650;letter-spacing:-.01em}
-.hd{display:flex;flex-wrap:wrap;gap:6px 24px;padding-bottom:14px;border-bottom:1px solid var(--line)}
-.hd div{display:flex;flex-direction:column;font-size:.92em}
-.hd span{font-size:.74em;color:var(--mute)}
-.kp{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:16px 0 4px}
-.kp div{border:1px solid var(--line);border-radius:7px;padding:8px 2px;text-align:center}
-.kp b{display:block;font-size:1.4em;line-height:1.1;font-variant-numeric:tabular-nums}
-.kp span{display:block;font-size:.66em;color:var(--mute);margin-top:3px}
-.kp .hi{background:var(--w);border-color:var(--w);color:var(--wt)}.kp .hi span{color:var(--wt)}
-h2{font-size:.9em;margin:26px 0 10px;color:var(--ink);font-weight:650;display:flex;justify-content:space-between;align-items:baseline;padding-bottom:6px;border-bottom:1px solid var(--line)}
-h2 span{font-weight:400;color:var(--mute);font-size:.9em}
-.tb{display:none;margin:18px 0 4px}.js .tb{display:block}
-.f{display:block;font-size:.82em;color:var(--mute)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+.w{max-width:45em;margin:0 auto;padding:1.5em 1em 4em}
+h1{font-size:1.5em;margin:0 0 4px;font-weight:650}
+h2{font-size:.78em;margin:26px 0 10px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.m{color:var(--mute);margin:0 0 6px;font-size:.92em}
+.ctl{display:none;flex-direction:column;gap:12px;margin:16px 0;padding:14px;border:1px solid var(--line);border-radius:8px}
+.js .ctl{display:flex}
+.ctl label.f{font-size:.82em;color:var(--mute)}
 input[type=search],input[type=date],select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:transparent;border:1px solid var(--mute);border-radius:7px;padding:9px 10px;margin-top:4px;min-height:44px}
-.tb>input[type=search]{margin-top:0}
 input[type=range]{width:100%;accent-color:var(--acc)}
-.ctl{margin-top:8px;border:1px solid var(--line);border-radius:8px}
-.ctl>summary{padding:11px 34px 11px 14px;font-size:.9em}
-.cb{display:flex;flex-direction:column;gap:12px;padding:2px 14px 14px}
 .g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tg{display:flex;align-items:center;gap:10px;font-size:.9em;cursor:pointer}
 .tg input{position:absolute;opacity:0;width:1px;height:1px}
@@ -232,93 +199,94 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:5px;background:var(--mute);transition:transform .2s}
 .tg input:checked+.sw{background:var(--acc);border-color:var(--acc)}
 .tg input:checked+.sw::after{transform:translateX(20px);background:var(--ai)}
-.tg input:focus-visible+.sw,button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.tg input:focus-visible+.sw,button:focus-visible,summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 button{font:inherit;font-size:.9em;padding:9px 12px;min-height:44px;border:1px solid var(--mute);border-radius:8px;background:transparent;color:var(--ink);cursor:pointer}
-#cn{color:var(--mute);font-size:.82em;margin:10px 0 0}
-details.it,details.kb{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;animation:rise .4s both;animation-delay:calc(var(--i,0)*50ms)}
-details.imp{border-left:4px solid var(--w)}
-details.kb{margin:14px 0 0}
-summary{cursor:pointer;list-style:none;position:relative;padding:11px 34px 11px 14px}
+#cn{color:var(--mute);font-size:.85em;margin:8px 0 0}
+.fb{display:none;flex-wrap:wrap;gap:8px;margin:16px 0 0}
+.js .fb{display:flex}
+.fb button{display:inline-flex;gap:.5em;align-items:center;padding:8px 14px}
+.fb button span{font-variant-numeric:tabular-nums;opacity:.8}
+.fb button[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:var(--ai)}
+.fb button.w{border:2px solid var(--w);font-weight:700}
+.fb button.w[aria-pressed=true]{background:var(--w);border-color:var(--w);color:var(--wt)}
+details.it,details.kb{border:1px solid var(--line);border-radius:8px;margin-bottom:10px;animation:rise .4s both;animation-delay:calc(var(--i,0)*50ms)}
+details.it.imp{border-left:6px solid var(--w);background:color-mix(in srgb,var(--w) 8%,transparent)}
+details.kb{margin:10px 0}
+summary{cursor:pointer;list-style:none;position:relative;padding:12px 56px 12px 14px;display:grid;grid-template-columns:6.6em 4.6em 1fr;gap:6px 10px;align-items:center}
+details.kb>summary{display:block}
 summary::-webkit-details-marker{display:none}
-summary::after{content:"\\25B8";position:absolute;right:14px;top:11px;color:var(--mute)}
-details[open]>summary::after{content:"\\25BE"}
-.mt{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.t{display:block;font-weight:600;line-height:1.3}
-.pv{display:block;margin-top:2px;font-size:.88em;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-details[open] .pv{display:none}
-.c{border:1px solid var(--ink);border-radius:5px;padding:0 8px;font-size:.74em;line-height:1.7;white-space:nowrap}
+summary:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+summary::after{content:"+";position:absolute;right:12px;top:10px;width:2em;height:2em;display:flex;align-items:center;justify-content:center;border:1px solid var(--mute);border-radius:7px;font-weight:700;line-height:1;color:var(--ink)}
+details[open]>summary::after{content:"\\2212"}
+summary:hover::after{background:var(--acc);border-color:var(--acc);color:var(--ai)}
+.t{grid-column:1/-1;font-weight:600}
+.c{display:block;text-align:center;border:1px solid var(--ink);border-radius:5px;padding:0 6px;font-size:.78em;line-height:1.7}
 .c.s1{border-color:transparent;background:var(--c1);color:var(--c1t)}
-.c.s2{border-style:dashed;border-color:var(--mute);color:var(--mute)}
+.c.s2{border-color:transparent;background:var(--ci);color:var(--cit)}
 .c.s3{border-color:transparent;background:var(--c2);color:var(--c2t)}
-.wi{font-size:.74em;line-height:1.7;padding:0 8px;border-radius:5px;background:var(--w);color:var(--wt);white-space:nowrap}
-.d{margin-left:auto;font-size:.82em;color:var(--mute);font-variant-numeric:tabular-nums}
-.bd{padding:0 14px 12px}
-.bd ul{margin:2px 0 0;padding-left:1.1em}.bd li{margin:3px 0}
-.bd p{margin:8px 0 0;font-size:.9em;color:var(--mute)}
-.bd p.pl{white-space:pre-wrap;color:var(--ink);font-size:.95em}
-details.dn .t{color:var(--mute)}
+.wi{font-size:.74em;font-weight:700;letter-spacing:.03em;line-height:1.7;text-align:center;border-radius:5px;background:var(--w);color:var(--wt)}
+.wi:empty{background:none}
+.d{font-size:.85em;color:var(--mute);font-variant-numeric:tabular-nums}
+.bd{padding:0 14px 12px}.bd p{margin:4px 0 0;white-space:pre-wrap;font-size:.95em}
 .empty{color:var(--mute)}
-.ft{margin:36px 0 0;padding-top:14px;border-top:1px solid var(--line);color:var(--mute);font-size:.82em;white-space:pre-wrap}
+.ft{margin:32px 0 0;padding-top:12px;border-top:1px solid var(--line);color:var(--mute);font-size:.85em;white-space:pre-wrap}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){details.it,details.kb{animation:none}.sw::after{transition:none}}
-@media print{.tb{display:none!important}body{background:#fff;color:#000}details.it,details.kb{break-inside:avoid;animation:none}}`;
-const ivBody=(r,ia)=>`<div class="w"><h1>${r.ti}</h1><div class="hd">${r.head}</div>${r.sum}${r.kb}`
-+(ia?`<div class="tb"><input type="search" id="q" placeholder="Suchen (Titel, Details, Kontakt, Datum)" aria-label="Suche"><details class="ctl"><summary>Filter und Ansicht</summary><div class="cb">
-<div class="g"><label class="tg"><input type="checkbox" id="fw"><span class="sw"></span>Nur Wichtige</label><label class="tg"><input type="checkbox" id="fe"><span class="sw"></span>Ohne Erledigte</label></div>
-<div class="g"><label class="f">Status<select id="fs"><option value="all">Alle</option><option>Offen</option><option>In Klärung</option><option>Info</option><option>Erledigt</option></select></label>
-<label class="f">Sortierung<select id="so"><option value="st">Nach Status</option><option value="alt">Älteste zuerst</option><option value="neu">Neueste zuerst</option></select></label></div>
+@media print{.ctl,.fb{display:none!important}body{background:#fff;color:#000}details.it,details.kb{break-inside:avoid;animation:none}}`;
+const ivBody=(r,ia)=>`<div class="w"><h1>Rückkehr-Übersicht</h1><p class="m" id="hd">${r.head}</p>${ia?"":`<p class="m">${r.sum}</p>`}<div id="kb">${r.kb}</div>
+`+(ia?`<div class="fb" id="fb" role="group" aria-label="Schnellfilter"></div><div class="ctl"><label class="f">Suche (Titel, Details, Kontakte, Datum)<input type="search" id="q" placeholder="Suchbegriff eingeben"></label>
+<div class="g"><label class="f">Sortierung<select id="so"><option value="st">Nach Status</option><option value="alt">Älteste zuerst</option><option value="neu">Neueste zuerst</option></select></label></div>
 <div class="g"><label class="f">Datum von<input type="date" id="dv"></label><label class="f">Datum bis<input type="date" id="db"></label></div>
 <label class="f">Schriftgröße<input type="range" id="fz" min="14" max="24" step="1" value="16"></label>
 <label class="tg"><input type="checkbox" id="th"><span class="sw"></span>Dunkle Ansicht</label>
-<div class="g"><button id="ex">Alle aufklappen</button><button id="rs">Zurücksetzen</button></div></div></details></div>`:"")
-+`<p id="cn">${r.cn}</p><div id="ls">${r.list}</div>${r.foot?`<p class="ft">${r.foot}</p>`:""}</div>`;
+<div class="g"><button id="ex">Alle aufklappen</button><button id="rs">Zurücksetzen</button></div></div>`:`<p class="d">Tippe auf einen Eintrag, um die Details zu sehen.</p>`)+`<p id="cn">${r.cn}</p><div id="ls">${r.list}</div>${r.foot?`<p class="ft">${r.foot}</p>`:""}</div>`;
 function ivHtml(D,f){
 const ST=["Offen","In Klärung","Info","Erledigt"];
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fd=d=>d?d.split("-").reverse().join("."):"";
-const nz=s=>ST.indexOf(s)<0?"Info":s;
-const LN=t=>String(t||"").split("\n").map(x=>x.replace(/^\s*(•|-\s|\*\s)\s*/,"").trim()).filter(Boolean);
-const M=D.meta;
-const head=[["Einrichtung",M.ei],["Abwesenheit",M.zt],["Vertretung",M.vt]].filter(x=>x[1]&&String(x[1]).trim()).map(x=>'<div><span>'+x[0]+'</span><b>'+esc(String(x[1]).trim())+'</b></div>').join("");
-const kb=M.ko&&M.ko.trim()?'<details class="kb"><summary><b>Kontakte</b></summary><div class="bd"><p class="pl">'+esc(M.ko.trim())+'</p></div></details>':"";
-const cnt=ST.map(s=>D.items.filter(i=>nz(i.status)===s).length),nw=D.items.filter(i=>i.wichtig&&nz(i.status)!=="Erledigt").length;
-const sum=D.items.length?'<div class="kp"><div class="hi"><b>'+nw+'</b><span>Wichtig</span></div>'+ST.map((s,k)=>'<div><b>'+cnt[k]+'</b><span>'+s+'</span></div>').join("")+'</div>':"";
-const rs=(a,b)=>ST.indexOf(nz(a.status))-ST.indexOf(nz(b.status))||(b.wichtig?1:0)-(a.wichtig?1:0)||String(b.datum||"").localeCompare(String(a.datum||""));
-const so=f.so||"st",rk=so==="alt"?(a,b)=>String(a.datum||"").localeCompare(String(b.datum||"")):so==="neu"?(a,b)=>String(b.datum||"").localeCompare(String(a.datum||"")):rs;
+const head=[D.meta.ei&&"Einrichtung: "+D.meta.ei,D.meta.zt&&"Abwesenheit: "+D.meta.zt,D.meta.vt&&"Vertretung: "+D.meta.vt].filter(Boolean).map(esc).join(" | ");
+const kb=D.meta.ko?'<details class="kb"><summary><b>Kontakte</b></summary><div class="bd"><p>'+esc(D.meta.ko)+'</p></div></details>':"";
+const cnt=ST.map(s=>D.items.filter(i=>i.status===s).length),nw=D.items.filter(i=>i.wichtig&&i.status!=="Erledigt").length;
+const sum=D.items.length?cnt[0]+" offen · "+cnt[1]+" in Klärung · "+cnt[2]+" Info · "+cnt[3]+" erledigt"+(nw?" · davon "+nw+" wichtig und nicht erledigt":""):"";
+const rs=(a,b)=>ST.indexOf(a.status)-ST.indexOf(b.status)||(b.wichtig?1:0)-(a.wichtig?1:0)||b.datum.localeCompare(a.datum);
+const so=f.so||"st",rk=so==="alt"?(a,b)=>a.datum.localeCompare(b.datum):so==="neu"?(a,b)=>b.datum.localeCompare(a.datum):rs;
 const t=(f.t||"").toLowerCase();
-const card=(i,n)=>{const s=ST.indexOf(nz(i.status)),ls=LN(i.details),op=f.o==="alle"||(f.o==="std"&&i.wichtig&&s<3);
-return '<details class="it'+(i.wichtig?" imp":"")+(s===3?" dn":"")+'"'+(op?" open":"")+' style="--i:'+Math.min(n,8)+'"><summary><span class="mt"><span class="c s'+s+'">'+ST[s]+'</span>'+(i.wichtig?'<span class="wi">Wichtig</span>':"")+(i.datum?'<span class="d">'+fd(i.datum)+'</span>':"")+'</span><b class="t">'+esc(i.titel)+'</b>'+(ls[0]?'<span class="pv">'+esc(ls[0])+'</span>':"")+'</summary><div class="bd">'+(ls.length?'<ul>'+ls.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul>':"")+(i.kontakt?'<p>Kontakt: '+esc(i.kontakt)+'</p>':"")+(!ls.length&&!i.kontakt?'<p>Keine weiteren Details.</p>':"")+'</div></details>'};
-const v=D.items.filter(i=>(!f.fw||i.wichtig)&&(!f.fe||nz(i.status)!=="Erledigt")&&(!f.fs||f.fs==="all"||nz(i.status)===f.fs)&&(!f.von||String(i.datum||"")>=f.von)&&(!f.bis||String(i.datum||"")<=f.bis)&&(!t||[i.titel,i.details,i.kontakt,fd(i.datum),nz(i.status)].join(" ").toLowerCase().includes(t))).sort(rk);
-const act=v.filter(i=>nz(i.status)!=="Erledigt"),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig&&nz(i.status)!=="Info"),inf=act.filter(i=>!i.wichtig&&nz(i.status)==="Info"),dn=v.filter(i=>nz(i.status)==="Erledigt");
-const sec=(h,a)=>a.length?'<h2>'+h+'<span>'+a.length+'</span></h2>'+a.map(card).join(""):"";
-const body=!v.length?'<p class="empty">'+(D.items.length?"Keine Einträge gefunden.":"Keine Einträge vorhanden.")+'</p>':so==="st"?sec("Das Wichtigste",imp)+sec("Offen und in Klärung",rest)+sec("Zur Information",inf)+sec("Erledigt",dn):sec(so==="alt"?"Chronologisch, älteste zuerst":"Chronologisch, neueste zuerst",v);
-return{ti:esc(M.ti||"Rückkehr-Übersicht"),head:head,kb:kb,sum:sum,foot:esc((M.br||"").trim()),cn:v.length+" von "+D.items.length+" Einträgen",list:body}}
+const card=(i,n)=>'<details class="it'+(i.wichtig?" imp":"")+'"'+((f.open||(f.openImp&&i.wichtig&&i.status!=="Erledigt"))?" open":"")+' style="--i:'+Math.min(n,8)+'"><summary><span class="c s'+ST.indexOf(i.status)+'">'+esc(i.status)+'</span><span class="wi">'+(i.wichtig?"Wichtig":"")+'</span><span class="d">'+fd(i.datum)+'</span><b class="t">'+esc(i.titel)+'</b></summary><div class="bd">'+(i.details?'<p>'+esc(i.details)+'</p>':"")+(i.kontakt?'<p>Kontakt: '+esc(i.kontakt)+'</p>':"")+(!i.details&&!i.kontakt?'<p class="d">Keine weiteren Details.</p>':"")+'</div></details>';
+const v=D.items.filter(i=>(!f.fw||i.wichtig)&&(!f.fs||!f.fs.length||f.fs.includes(i.status))&&(!f.von||i.datum>=f.von)&&(!f.bis||i.datum<=f.bis)&&(!t||[i.titel,i.details,i.kontakt,fd(i.datum),i.status].join(" ").toLowerCase().includes(t))).sort(rk);
+const act=v.filter(i=>i.status!=="Erledigt"),imp=act.filter(i=>i.wichtig),rest=act.filter(i=>!i.wichtig),done=v.filter(i=>i.status==="Erledigt");
+const sec=(h,a)=>a.length?"<h2>"+h+"</h2>"+a.map(card).join(""):"";
+const body=!v.length?'<p class="empty">'+(D.items.length?"Keine Einträge gefunden.":"Keine Einträge vorhanden.")+'</p>':so==="st"?sec("Das Wichtigste",imp)+sec("Offen, in Klärung und Info",rest)+sec("Erledigt",done):sec(so==="alt"?"Chronologisch, älteste zuerst":"Chronologisch, neueste zuerst",v);
+return{head:head,kb:kb,sum:sum,foot:esc(D.meta.br||""),cn:v.length+" von "+D.items.length+" Einträgen",list:body}}
 function viewer(D){
-const $=s=>document.querySelector(s);let o="std";
-function draw(){const r=ivHtml(D,{t:$("#q").value.trim(),fw:$("#fw").checked,fe:$("#fe").checked,fs:$("#fs").value,so:$("#so").value,von:$("#dv").value,bis:$("#db").value,o:o});
-$("#ls").innerHTML=r.list;$("#cn").textContent=r.cn;$("#ex").textContent=o==="alle"?"Alle zuklappen":"Alle aufklappen"}
-$("#q").oninput=draw;
-["#fw","#fe","#fs","#so","#dv","#db"].forEach(s=>$(s).onchange=draw);
-$("#fz").oninput=e=>{document.documentElement.style.fontSize=e.target.value+"px"};
-$("#th").checked=!!(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);
+const $=s=>document.querySelector(s),ST=["Offen","In Klärung","Info","Erledigt"];let open=false,fw=false,fs=[];
+const n=k=>D.items.filter(i=>i.status===k).length;
+$("#fb").innerHTML='<button type="button" class="w" data-w="1" aria-pressed="false">Wichtig <span>'+D.items.filter(i=>i.wichtig).length+'</span></button>'+ST.map(s=>'<button type="button" data-s="'+s+'" aria-pressed="false">'+s+' <span>'+n(s)+'</span></button>').join("");
+function draw(){const r=ivHtml(D,{t:$("#q").value.trim(),fw:fw,fs:fs,so:$("#so").value,von:$("#dv").value,bis:$("#db").value,open:open});
+$("#ls").innerHTML=r.list;$("#cn").textContent=r.cn;$("#ex").textContent=open?"Alle zuklappen":"Alle aufklappen"}
+$("#fb").onclick=e=>{const b=e.target.closest("button");if(!b)return;const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on?"true":"false");if(b.dataset.w)fw=on;else fs=on?fs.concat(b.dataset.s):fs.filter(x=>x!==b.dataset.s);draw()};
+["#q","#dv","#db"].forEach(s=>$(s).oninput=draw);
+$("#so").onchange=draw;$("#dv").onchange=$("#db").onchange=draw;
+const z=$("#fz");z.max=Math.min(32,Math.max(24,Math.floor(innerWidth/40)));
+z.oninput=e=>{document.documentElement.style.fontSize=e.target.value+"px"};
+$("#th").checked=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches;
 $("#th").onchange=e=>{document.documentElement.dataset.theme=e.target.checked?"dark":"light"};
-$("#ex").onclick=()=>{o=o==="alle"?"keine":"alle";draw()};
-$("#rs").onclick=()=>{$("#q").value="";$("#fw").checked=$("#fe").checked=false;$("#fs").value="all";$("#so").value="st";$("#dv").value=$("#db").value="";o="std";draw()};
+$("#ex").onclick=()=>{open=!open;document.querySelectorAll("#ls details").forEach(d=>d.open=open);$("#ex").textContent=open?"Alle zuklappen":"Alle aufklappen"};
+$("#rs").onclick=()=>{$("#q").value="";fw=false;fs=[];document.querySelectorAll("#fb button").forEach(b=>b.setAttribute("aria-pressed","false"));$("#so").value="st";$("#dv").value=$("#db").value="";open=false;draw()};
 window.onbeforeprint=()=>document.querySelectorAll("details").forEach(d=>d.open=true);
 }
-function ivDoc(ia){const t=S.meta.ti||DT,m=S.meta,D0={meta:{ti:t,ei:m.ei,zt:m.zt,vt:m.vt,ko:m.ko,br:m.br},items:S.items},r=ivHtml(D0,{fs:"all",o:"std"}),D=JSON.stringify(D0).replace(/</g,"\\u003c");
-return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(t)}</title><style>${IVCSS}</style></head><body>${ivBody(r,ia)}`+(ia?`<script>document.documentElement.className="js";const ivHtml=${ivHtml.toString()};(${viewer.toString()})(${D})<\/script>`:`<script>window.onbeforeprint=function(){document.querySelectorAll("details").forEach(function(d){d.open=true})}<\/script>`)+`</body></html>`}
-$("#bh").onclick=()=>ask(t=>out(`${sl(t)}-${today()}.html`,ivDoc(false),"text/html",t));
-$("#bi").onclick=()=>ask(t=>out(`${sl(t)}-${today()}.html`,ivDoc(true),"text/html",t));
-$("#bp").onclick=()=>ask(t=>out(`${sl(t)}-${today()}.pdf`,pdf(),"application/pdf",t));
-$("#bm").onclick=e=>{const b=e.currentTarget;ask(async()=>{const x=rep().md;try{await navigator.clipboard.writeText(x)}catch(z){const a=document.createElement("textarea");a.value=x;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(y){}a.remove()}
-b.textContent="Kopiert";setTimeout(()=>b.textContent="Als Markdown kopieren",1600)})};
+function ivDoc(ia){const r=ivHtml(S,{fs:[],openImp:!ia}),D=JSON.stringify({meta:S.meta,items:S.items}).replace(/</g,"\\u003c");
+return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rückkehr-Übersicht</title><style>${IVCSS}</style></head><body>${ivBody(r,ia)}`+(ia?`<script>document.documentElement.className="js";const ivHtml=${ivHtml.toString()};(${viewer.toString()})(${D})<\/script>`:"")+`</body></html>`}
+$("#bh").onclick=()=>out(`Rueckkehr-Uebersicht-statisch-${today()}.html`,ivDoc(false),"text/html");
+$("#bi").onclick=()=>out(`Rueckkehr-Uebersicht-interaktiv-${today()}.html`,ivDoc(true),"text/html");
+$("#bp").onclick=()=>out(`Rueckkehr-Uebersicht-${today()}.pdf`,pdf(),"application/pdf");
+$("#bm").onclick=async e=>{const t=rep().md,b=e.target;try{await navigator.clipboard.writeText(t)}catch(x){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(y){}a.remove()}
+b.textContent="Kopiert";setTimeout(()=>b.textContent="Als Markdown kopieren",1600)};
 $("#bb").onclick=async()=>{await out(`Rueckkehr-Backup-${today()}.json`,JSON.stringify(S,null,1),"application/json");S.meta.bk=today();save();render()};
 $("#bl").onclick=()=>$("#imp").click();
 $("#imp").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
 try{const j=JSON.parse(await f.text());if(!Array.isArray(j.items))throw 0;
 if(!confirm(`Aktuelle Liste durch das Backup ersetzen (${j.items.length} Einträge)?`))return;
-S={meta:Object.assign({zt:"",vt:"",ei:"",ko:"",br:"",so:"st",bk:"",ti:""},j.meta),items:j.items.map(norm)};save();fill();render()}catch(x){alert("Diese Datei ist kein gültiges Backup.")}};
+S={meta:Object.assign({zt:"",vt:"",ei:"",ko:"",br:"",so:"st",bk:""},j.meta),items:j.items};S.items.forEach(i=>{if(!ST.includes(i.status))i.status="Info";if(i.datum==null)i.datum=""});save();fill();render()}catch(x){alert("Diese Datei ist kein gültiges Backup.")}};
 render();
 </script>
 </body>
