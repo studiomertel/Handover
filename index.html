@@ -19,7 +19,8 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .wrap{max-width:720px;margin:0 auto;padding:20px 16px 110px}
-h1{font-size:1.5rem;margin:0 0 14px;font-weight:650}
+h1{font-size:1.6rem;margin:0 0 16px;font-weight:700;text-align:center}
+h2.k{text-align:center}
 label.f{display:block;font-size:.85rem;color:var(--mute);margin-bottom:10px}
 input,select,textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:7px;padding:9px 10px;margin-top:4px}
 textarea{min-height:96px;resize:vertical}
@@ -33,6 +34,8 @@ textarea{min-height:96px;resize:vertical}
 .tg input:checked+.sw::after{transform:translateX(20px);background:var(--acc-ink)}
 .tg input:focus-visible+.sw,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .row{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:10px;cursor:pointer}
+.row.k0{border-left:5px solid #47607A}.row.k1{border-left:5px solid #A8A594}.row.k2{border-left:5px solid #3A431F}.row.k3{border-left:5px solid #7C93A0}.row.k4{border-left:5px solid #93958A}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .row.k2{border-left-color:#5C6E3C}}
 .row.mk{background:#A8A594}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .row.mk{background:#45473E}}
 .row:active{background:var(--acc);color:var(--acc-ink)}
@@ -45,6 +48,8 @@ textarea{min-height:96px;resize:vertical}
 @media (prefers-color-scheme:dark){.chip.s1{background:#45473E;color:#B7BFBC}.chip.s2{border-color:#94A37E;background:#3A431F;color:#B7BFBC}.chip.s3{background:#3F4E5C;color:#B7BFBC}}
 .imp{font-size:.78rem;border:1px solid var(--ink);border-radius:5px;padding:0 6px;height:fit-content}
 .mv{display:flex;gap:6px;margin-left:auto}
+.bk{text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.fb{display:flex;gap:6px;margin:2px 0 6px}.fb button{font:inherit;min-width:44px;height:38px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--ink);cursor:pointer}
 .mv button{font:inherit;width:44px;height:36px;border:1px solid var(--line);border-radius:7px;background:transparent;color:inherit;cursor:pointer}
 .empty,#cnt,#bk{color:var(--mute);font-size:.9rem}
 .r{animation:rise .45s both;animation-delay:calc(var(--i,0)*60ms)}
@@ -89,7 +94,7 @@ dialog .btns{margin-top:14px}
 <button class="btn" id="bn">Bericht einlesen (bearbeitet)</button>
 </div>
 <p id="bk"></p>
-<p style="margin-top:4px;font-size:.8rem;color:var(--mute)">Version 9 (Berichtstitel, Reiter, skalierender Bericht)</p>
+<p style="margin-top:4px;font-size:.8rem;color:var(--mute)">Version 10 (Titel als Dateiname, Erstellen-Dialog, Textformatierung, neues Design)</p>
 </div>
 <button class="fab" id="add">+ Neuer Eintrag</button>
 <dialog id="dlg">
@@ -100,6 +105,7 @@ dialog .btns{margin-top:14px}
 <label class="tg" style="margin-bottom:10px"><input type="checkbox" id="in"><span class="sw"></span>Intern (nicht im Bericht)</label>
 <label class="tg" style="margin-bottom:10px"><input type="checkbox" id="mkd"><span class="sw"></span>Markiert</label>
 <label class="f">Kontakt zu diesem Eintrag (optional)<input id="kt" placeholder="z. B. Firma XY, Herr Beispiel, 0123 456789"></label>
+<div class="fb" id="fb"><button type="button" data-m="**" aria-label="Fett"><b>F</b></button><button type="button" data-m="*" aria-label="Kursiv"><i>K</i></button><button type="button" data-m="__" aria-label="Unterstrichen"><u>U</u></button><button type="button" data-m="~~" aria-label="Durchgestrichen"><s>D</s></button><button type="button" data-m="!!" aria-label="Blockschrift">AA</button></div>
 <label class="f">Details (später nachtragbar)<textarea id="de"></textarea></label>
 <label class="f">Notiz<textarea id="nz" style="min-height:64px"></textarea></label>
 <div class="btns">
@@ -108,10 +114,16 @@ dialog .btns{margin-top:14px}
 <button class="btn" id="del" style="grid-column:1/-1">Eintrag löschen</button>
 </div>
 </dialog>
+<dialog id="odlg"><h3 style="margin:0 0 12px;text-align:center">Bericht erstellen</h3>
+<label class="f">Berichtstitel<input id="ot" placeholder="Rückkehr-Übersicht"></label>
+<label class="f">Dateiname (ohne Endung)<input id="on"></label>
+<p id="om" style="font-size:.82rem;color:var(--mute);margin:0"></p>
+<div class="btns"><button class="btn p" id="oo">Erstellen und teilen</button><button class="btn" id="oc">Abbrechen</button></div></dialog>
 <input type="file" id="imp" accept=".json,application/json" hidden>
 <input type="file" id="imh" accept=".html,text/html" hidden>
 <script>
 const K="rueckkehr-v1",$=s=>document.querySelector(s),ST=["Offen","In Klärung","Info","","Erledigt"],sc=s=>{const k={"Offen":0,"In Klärung":1,"Erledigt":2,"Info":3}[s];return k===undefined?4:k},so=s=>{const k=ST.indexOf(s);return k<0?3:k};
+const fmt=s=>esc(s).split("\n").map(l=>l.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/__(.+?)__/g,"<u>$1</u>").replace(/~~(.+?)~~/g,"<s>$1</s>").replace(/!!(.+?)!!/g,'<span class="bk">$1</span>').replace(/\*(\S(?:[^*]*\S)?)\*/g,"<em>$1</em>")).join("\n");
 let S={meta:{tt:"",zt:"",vt:"",ei:"",ko:"",br:"",so:"st",bk:""},items:[]},cur=null;
 try{const r=JSON.parse(localStorage.getItem(K));if(r&&Array.isArray(r.items))S={meta:Object.assign(S.meta,r.meta),items:r.items}}catch(e){}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
@@ -122,11 +134,11 @@ const fd=d=>d?d.split("-").reverse().join("."):"";
 const today=()=>{const t=new Date();return new Date(t-t.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 const rank0=(a,b)=>so(a.status)-so(b.status)||(b.wichtig?1:0)-(a.wichtig?1:0)||b.datum.localeCompare(a.datum);
 const rank=(a,b)=>S.meta.so==="man"?0:S.meta.so==="alt"?a.datum.localeCompare(b.datum):S.meta.so==="neu"?b.datum.localeCompare(a.datum):rank0(a,b);
-let VIS=[];const pub=()=>S.items.filter(i=>!i.intern);
+let VIS=[];const pub=()=>S.items.filter(i=>!i.intern),strip=s=>String(s).replace(/\*\*(.+?)\*\*/g,"$1").replace(/__(.+?)__/g,"$1").replace(/~~(.+?)~~/g,"$1").replace(/!!(.+?)!!/g,(m,a)=>a.toUpperCase()).replace(/\*(\S(?:[^*]*\S)?)\*/g,"$1"),mdf=s=>s.replace(/__(.+?)__/g,"<u>$1</u>").replace(/!!(.+?)!!/g,(m,a)=>a.toUpperCase());
 function mv(id,d){const k=VIS.findIndex(x=>x.id===id),nb=VIS[k+d];if(!nb)return;const a=S.items.indexOf(VIS[k]),b=S.items.indexOf(nb);[S.items[a],S.items[b]]=[S.items[b],S.items[a]];save();render()}
 function render(){
 const v=S.items.filter(i=>!($("#fo").checked&&i.status==="Erledigt")&&!($("#fw").checked&&!i.wichtig)).sort(rank);
-const man=S.meta.so==="man";$("#list").innerHTML=v.length?v.map((i,n)=>`<div class="row r${i.mark?" mk":""}" data-id="${i.id}" style="--i:${Math.min(n,8)}"><div class="top"><b>${esc(i.titel)}</b>${i.wichtig?'<span class="imp">Wichtig</span>':""}${i.intern?'<span class="imp">Intern</span>':""}${man?`<span class="mv"><button data-mv="${i.id}" data-d="-1" aria-label="nach oben">▲</button><button data-mv="${i.id}" data-d="1" aria-label="nach unten">▼</button></span>`:""}</div><div class="sub"><span class="chip s${sc(i.status)}">${esc(i.status)||"&nbsp;"}</span><span>${fd(i.datum)}</span>${i.geaendert?`<span>· geändert ${fd(i.geaendert)}</span>`:""}</div>${i.details?`<p>${esc(i.details)}</p>`:""}${i.kontakt?`<p>Kontakt: ${esc(i.kontakt)}</p>`:""}${i.notiz?`<p>Notiz: ${esc(i.notiz)}</p>`:""}</div>`).join(""):`<p class="empty">Noch keine Einträge. Tippe auf „Neuer Eintrag“.</p>`;
+const man=S.meta.so==="man";$("#list").innerHTML=v.length?v.map((i,n)=>`<div class="row r k${sc(i.status)}${i.mark?" mk":""}" data-id="${i.id}" style="--i:${Math.min(n,8)}"><div class="top"><b>${esc(i.titel)}</b>${i.wichtig?'<span class="imp">Wichtig</span>':""}${i.intern?'<span class="imp">Intern</span>':""}${man?`<span class="mv"><button data-mv="${i.id}" data-d="-1" aria-label="nach oben">▲</button><button data-mv="${i.id}" data-d="1" aria-label="nach unten">▼</button></span>`:""}</div><div class="sub"><span class="chip s${sc(i.status)}">${esc(i.status)||"&nbsp;"}</span><span>${fd(i.datum)}</span>${i.geaendert?`<span>· geändert ${fd(i.geaendert)}</span>`:""}</div>${i.details?`<p>${fmt(i.details)}</p>`:""}${i.kontakt?`<p>Kontakt: ${esc(i.kontakt)}</p>`:""}${i.notiz?`<p>Notiz: ${esc(i.notiz)}</p>`:""}</div>`).join(""):`<p class="empty">Noch keine Einträge. Tippe auf „Neuer Eintrag“.</p>`;
 VIS=v;const ni=S.items.filter(i=>i.intern).length;$("#cnt").textContent=`${v.length} von ${S.items.length} Einträgen`+(ni?` · ${ni} intern (nicht im Bericht)`:"");
 const b=S.meta.bk;$("#bk").textContent=b?`Letztes Backup: ${fd(b)}${(Date.now()-new Date(b))/864e5>7?" (älter als 7 Tage, bitte erneuern)":""}`:"Noch kein Backup gespeichert. Bitte regelmäßig sichern.";
 }
@@ -151,11 +163,11 @@ $("#so").onchange=e=>{S.meta.so=e.target.value;save();render()};
 const fill=()=>{$("#tt").value=S.meta.tt||"";$("#zt").value=S.meta.zt;$("#vt").value=S.meta.vt;$("#ei").value=S.meta.ei;$("#ko").value=S.meta.ko;$("#br").value=S.meta.br||"";$("#so").value=S.meta.so};fill();
 function rep(){
 const P=pub(),act=P.filter(i=>i.status!=="Erledigt").sort(rank),imp=act.filter(i=>i.wichtig),inf=act.filter(i=>!i.wichtig&&(i.status==="Info"||!i.status)),rest=act.filter(i=>!i.wichtig&&i.status!=="Info"&&i.status),done=P.filter(i=>i.status==="Erledigt").sort(rank);
-const md=(t,a)=>a.length?`\n## ${t}\n`+a.map(i=>`- **${i.titel}** (${[i.status,fd(i.datum)].filter(Boolean).join(", ")})${i.details?": "+i.details.replace(/\n/g," "):""}${i.kontakt?" (Kontakt: "+i.kontakt+")":""}${i.notiz?" (Notiz: "+i.notiz.replace(/\n/g," ")+")":""}`).join("\n")+"\n":"";
+const md=(t,a)=>a.length?`\n## ${t}\n`+a.map(i=>`- **${i.titel}** (${[i.status,fd(i.datum)].filter(Boolean).join(", ")})${i.details?": "+mdf(i.details.replace(/\n/g," ")):""}${i.kontakt?" (Kontakt: "+i.kontakt+")":""}${i.notiz?" (Notiz: "+i.notiz.replace(/\n/g," ")+")":""}`).join("\n")+"\n":"";
 const head=[S.meta.ei&&"Einrichtung: "+S.meta.ei,S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean);
 return{md:`# ${S.meta.tt||"Rückkehr-Übersicht"}\n\n${head.join("  \n")}\n`+(S.meta.ko?`\n## Kontakte\n${S.meta.ko}\n`:"")+md("Das Wichtigste",imp)+md("Offen und in Klärung",rest)+md("Zur Information",inf)+md("Erledigt",done)+(S.meta.br?"\n---\n"+S.meta.br+"\n":"")}}
-async function out(name,txt,type){const f=new File([txt],name,{type});
-try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==="AbortError")return}
+async function out(name,txt,type,ti){const f=new File([txt],name,{type});
+try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:ti||name});return}}catch(e){if(e.name==="AbortError")return}
 const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
 function pdf(){
 const W=595,H=842,M=56,CW=W-2*M,WM={"€":128,"„":132,"…":133,"‘":145,"’":146,"“":147,"”":148,"•":149,"–":150,"—":151};
@@ -169,7 +181,7 @@ const P=pub(),act=P.filter(i=>i.status!=="Erledigt").sort(rank),imp=act.filter(i
 ln(S.meta.tt||"Rückkehr-Übersicht",20,1,4);
 [S.meta.ei&&"Einrichtung: "+S.meta.ei,S.meta.zt&&"Abwesenheit: "+S.meta.zt,S.meta.vt&&"Vertretung: "+S.meta.vt].filter(Boolean).forEach(t=>ln(t,11,0,0,"0.2 0.2 0.18"));
 y-=10;if(S.meta.ko){ln("Kontakte",14,1,6);ln(S.meta.ko,11,0,0);y-=14}
-const sec=(t,a)=>{if(!a.length)return;ln(t,14,1,6);a.forEach(i=>{ln(i.titel,12,1,1);ln([i.status,i.wichtig&&"Wichtig",fd(i.datum)].filter(Boolean).join("  |  "),10,0,2,"0.2 0.2 0.18");if(i.details)ln(i.details,11,0,0);if(i.kontakt)ln("Kontakt: "+i.kontakt,10,0,0,"0.2 0.2 0.18");if(i.notiz)ln("Notiz: "+i.notiz,10,0,0,"0.2 0.2 0.18");if(i.geaendert)ln("Zuletzt geändert: "+fd(i.geaendert),10,0,0,"0.2 0.2 0.18");y-=10});y-=4};
+const sec=(t,a)=>{if(!a.length)return;ln(t,14,1,6);a.forEach(i=>{ln(i.titel,12,1,1);ln([i.status,i.wichtig&&"Wichtig",fd(i.datum)].filter(Boolean).join("  |  "),10,0,2,"0.2 0.2 0.18");if(i.details)ln(strip(i.details),11,0,0);if(i.kontakt)ln("Kontakt: "+i.kontakt,10,0,0,"0.2 0.2 0.18");if(i.notiz)ln("Notiz: "+i.notiz,10,0,0,"0.2 0.2 0.18");if(i.geaendert)ln("Zuletzt geändert: "+fd(i.geaendert),10,0,0,"0.2 0.2 0.18");y-=10});y-=4};
 if(P.length){sec("Das Wichtigste",imp);sec("Offen und in Klärung",rest);sec("Zur Information",inf);sec("Erledigt",done)}else ln("Keine Einträge.",11,0,0);
 if(S.meta.br){y-=10;ln(S.meta.br,10,0,0,"0.2 0.2 0.18")}
 nl();
@@ -184,16 +196,20 @@ for(let k=1;k<=N;k++){off[k]=o.length;o+=`${k} 0 obj\n${ob[k]}\nendobj\n`}
 const xr=o.length;
 o+=`xref\n0 ${N+1}\n0000000000 65535 f \n`+off.slice(1).map(v=>String(v).padStart(10,"0")+" 00000 n \n").join("")+`trailer\n<</Size ${N+1}/Root 1 0 R>>\nstartxref\n${xr}\n%%EOF`;
 return Uint8Array.from(o,c=>c.charCodeAt(0)&255)}
-const IVL="--bg:#B7BFBC;--ink:#1B2A41;--mute:#45473E;--line:#93958A;--acc:#3A431F;--ai:#B7BFBC;--c1:#A8A594;--c1t:#1B2A41;--c2:#3A431F;--c2t:#B7BFBC;--c2b:#3A431F;--c3:#7C93A0;--c3t:#1B2A41;--hl:#A8A594;--w:#1B2A41;--wt:#B7BFBC";
-const IVD="--bg:#33342E;--ink:#B7BFBC;--mute:#A8ACA6;--line:#45473E;--acc:#94A37E;--ai:#1B2A41;--c1:#45473E;--c1t:#B7BFBC;--c2:#3A431F;--c2t:#B7BFBC;--c2b:#94A37E;--c3:#3F4E5C;--c3t:#B7BFBC;--hl:#45473E;--w:#94A37E;--wt:#1B2A41";
+const IVL="--bg:#B7BFBC;--ink:#1B2A41;--mute:#45473E;--line:#93958A;--acc:#3A431F;--ai:#B7BFBC;--c1:#A8A594;--c1t:#1B2A41;--c2:#3A431F;--c2t:#B7BFBC;--c2b:#3A431F;--c3:#7C93A0;--c3t:#1B2A41;--hl:#A8A594;--w:#1B2A41;--wt:#B7BFBC;--hd:#1B2A41;--hdt:#B7BFBC;--k0:#47607A;--k1:#A8A594;--k2:#3A431F;--k3:#7C93A0;--k4:#93958A";
+const IVD="--bg:#33342E;--ink:#B7BFBC;--mute:#A8ACA6;--line:#45473E;--acc:#94A37E;--ai:#1B2A41;--c1:#45473E;--c1t:#B7BFBC;--c2:#3A431F;--c2t:#B7BFBC;--c2b:#94A37E;--c3:#3F4E5C;--c3t:#B7BFBC;--hl:#45473E;--w:#94A37E;--wt:#1B2A41;--hd:#3F4E5C;--hdt:#B7BFBC;--k0:#7C93A0;--k1:#93958A;--k2:#5C6E3C;--k3:#47607A;--k4:#45473E";
 const IVCSS=`:root{${IVL};color-scheme:light}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${IVD};color-scheme:dark}}
 :root[data-theme="dark"]{${IVD};color-scheme:dark}
 *{box-sizing:border-box}html{font-size:clamp(15px,.55vw + 11px,22px)}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
 .w{max-width:60em;margin:0 auto;padding:24px 16px 60px}
-h1{font-size:1.5em;margin:0 0 4px;font-weight:650}
-h2{font-size:.78em;margin:26px 0 10px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+h1{font-size:1.75em;margin:0 0 6px;font-weight:700}
+.hd{text-align:center;background:var(--hd);color:var(--hdt);border-radius:10px;padding:28px 18px;margin-bottom:6px}
+.hd .m{color:var(--hdt);opacity:.85}
+h2{display:flex;align-items:center;gap:10px;font-size:.78em;margin:26px 0 10px;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;font-weight:650}
+h2::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--acc)}
+h2::after{content:"";flex:1;height:1px;background:var(--line)}
 .m{color:var(--mute);margin:0 0 6px;font-size:.92em}
 .ctl{display:none;margin:12px 0;padding:0 14px;border:1px solid var(--line);border-radius:8px}
 .js .ctl{display:block}
@@ -201,8 +217,8 @@ h2{font-size:.78em;margin:26px 0 10px;color:var(--mute);text-transform:uppercase
 .ctl>summary::after{right:0}
 .ci{display:flex;flex-direction:column;gap:12px;padding-bottom:14px}
 .tb,.sv,.jo{display:none}
-.js .tb{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 6px}
-.js .sv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 6px}
+.js .tb{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:18px 0 6px}
+.js .sv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px auto 6px;max-width:30em}
 .js .jo{display:block}
 .tb button{padding:6px 12px}
 .tb button[aria-pressed=true]{background:var(--acc);color:var(--ai);border-color:var(--acc)}
@@ -219,9 +235,13 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .tg input:checked+.sw::after{transform:translateX(20px);background:var(--ai)}
 .tg input:focus-visible+.sw,button:focus-visible,summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 button{font:inherit;font-size:.9em;padding:9px 12px;min-height:44px;border:1px solid var(--mute);border-radius:8px;background:transparent;color:var(--ink);cursor:pointer}
-#cn{color:var(--mute);font-size:.85em;margin:8px 0 0}
+#cn{text-align:center;color:var(--mute);font-size:.85em;margin:8px 0 0}
 details.it,details.kb{border:1px solid var(--line);border-radius:8px;margin-bottom:10px;animation:rise .4s both;animation-delay:calc(var(--i,0)*50ms)}
-details.it.imp{border-left:3px solid var(--w)}
+details.it{border-left:5px solid var(--k4)}
+details.k0{border-left-color:var(--k0)}details.k1{border-left-color:var(--k1)}details.k2{border-left-color:var(--k2)}details.k3{border-left-color:var(--k3)}
+details.it.imp{box-shadow:0 0 0 1px var(--w)}
+.imp .t{font-weight:700}
+.bk{text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 details.kb{margin:10px 0}
 summary{cursor:pointer;list-style:none;position:relative;padding:12px 34px 12px 14px;display:grid;grid-template-columns:6.6em 4.6em 1fr;gap:6px 10px;align-items:center}
 details.kb>summary{display:block}
@@ -245,13 +265,13 @@ details.mk{background:var(--hl)}
 textarea.nt{width:100%;min-height:84px;resize:vertical;font:inherit;font-size:16px;color:var(--ink);background:transparent;border:1px solid var(--mute);border-radius:7px;padding:9px 10px;margin-top:4px}
 .np{display:none}
 .pr{background:var(--acc);color:var(--ai);border-color:var(--acc)}
-.hn{font-size:.8em;color:var(--mute);margin:0}
-.ft{margin:32px 0 0;padding-top:12px;border-top:1px solid var(--line);color:var(--mute);font-size:.85em;white-space:pre-wrap}
+.hn{font-size:.8em;color:var(--mute);margin:0;text-align:center}
+.ft{text-align:center;margin:32px 0 0;padding-top:12px;border-top:1px solid var(--line);color:var(--mute);font-size:.85em;white-space:pre-wrap}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){details.it,details.kb{animation:none}.sw::after{transition:none}}
-@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}.ctl,.ed,.tb,.sv,.hn{display:none!important}body{background:#fff;color:#000}details.it,details.kb{break-inside:avoid;animation:none}.np:not(:empty){display:block;margin:6px 0 0;white-space:pre-wrap;font-size:.95em}details.mk{background:#e4e4de}}`;
-const ivBody=(r,ia)=>`<div class="w"><h1>${r.tt}</h1><p class="m" id="hd">${r.head}</p><p class="m" id="sm">${r.sum}</p><div id="kb">${r.kb}</div>
-`+(ia?`<div class="tb" id="tb"></div><details class="ctl"><summary>Suche, Filter und Einstellungen</summary><div class="ci"><label class="f">Suche (Titel, Details, Kontakte, Datum)<input type="search" id="q" placeholder="Suchbegriff eingeben"></label>
+@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}.ctl,.ed,.tb,.sv,.hn{display:none!important}body{background:#fff;color:#000}details.it,details.kb{break-inside:avoid;animation:none}.np:not(:empty){display:block;margin:6px 0 0;white-space:pre-wrap;font-size:.95em}details.mk{background:#e4e4de}.hd{background:none;color:#000;border-radius:0;border-bottom:2px solid #000;padding:8px 0}.hd .m{color:#333}}`;
+const ivBody=(r,ia)=>`<div class="w"><header class="hd"><h1>${r.tt}</h1><p class="m" id="hd">${r.head}</p><p class="m" id="sm">${r.sum}</p></header><div id="kb">${r.kb}</div>
+`+(ia?`<div class="tb" id="tb"></div><details class="ctl"><summary>Suche, Filter und Einstellungen</summary><div class="ci"><label class="f">Berichtstitel<input type="search" id="rt"></label><label class="f">Suche (Titel, Details, Kontakte, Datum)<input type="search" id="q" placeholder="Suchbegriff eingeben"></label>
 <div class="g"><label class="tg"><input type="checkbox" id="fw"><span class="sw"></span>Nur Wichtige</label><label class="tg"><input type="checkbox" id="fe"><span class="sw"></span>Ohne Erledigte</label><label class="tg"><input type="checkbox" id="fm"><span class="sw"></span>Nur Markierte</label></div>
 <div class="g"><label class="f">Status<select id="fs"><option value="all">Alle</option><option>Offen</option><option>In Klärung</option><option>Info</option><option value="none">Ohne Status</option><option>Erledigt</option></select></label>
 <label class="f">Sortierung<select id="so"><option value="st">Nach Status</option><option value="alt">Älteste zuerst</option><option value="neu">Neueste zuerst</option></select></label></div>
@@ -261,6 +281,7 @@ const ivBody=(r,ia)=>`<div class="w"><h1>${r.tt}</h1><p class="m" id="hd">${r.he
 <div class="g"><button id="ex">Alle aufklappen</button><button id="rs">Zurücksetzen</button></div></div></details><div class="sv"><button class="pr" id="pp">Als PDF sichern</button><button id="ph">Als HTML sichern</button></div><p class="hn jo">PDF: Im Druckfenster „Als PDF sichern“ wählen; gedruckt werden immer alle Einträge. Notizen, Markierungen und Status speichern sich automatisch in diesem Browser; die HTML-Datei enthält sie fest eingebaut.</p>`:`<p class="d">Tippe auf einen Eintrag, um die Details zu sehen.</p>`)+`<p id="cn">${r.cn}</p><div id="ls">${r.list}</div>${r.foot?`<p class="ft">${r.foot}</p>`:""}</div>`;
 function ivHtml(D,f){
 const ST=["Offen","In Klärung","Info","","Erledigt"],SC=s=>{const k={"Offen":0,"In Klärung":1,"Erledigt":2,"Info":3}[s];return k===undefined?4:k},SO=s=>{const k=ST.indexOf(s);return k<0?3:k};
+const fmt=s=>esc(s).split("\n").map(l=>l.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/__(.+?)__/g,"<u>$1</u>").replace(/~~(.+?)~~/g,"<s>$1</s>").replace(/!!(.+?)!!/g,'<span class="bk">$1</span>').replace(/\*(\S(?:[^*]*\S)?)\*/g,"<em>$1</em>")).join("\n");
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fd=d=>d?d.split("-").reverse().join("."):"";
 const head=[D.meta.ei&&"Einrichtung: "+D.meta.ei,D.meta.zt&&"Abwesenheit: "+D.meta.zt,D.meta.vt&&"Vertretung: "+D.meta.vt].filter(Boolean).map(esc).join(" | ");
@@ -271,16 +292,16 @@ const rs=(a,b)=>SO(a.status)-SO(b.status)||(b.wichtig?1:0)-(a.wichtig?1:0)||b.da
 const so=f.so||"st",rk=so==="alt"?(a,b)=>a.datum.localeCompare(b.datum):so==="neu"?(a,b)=>b.datum.localeCompare(a.datum):rs;
 const t=(f.t||"").toLowerCase();
 const card=(i,n)=>{const ed=f.ed,sel=ST.indexOf(i.status)<0?[i.status].concat(ST):ST;
-return '<details class="it'+(i.wichtig?" imp":"")+(i.mark?" mk":"")+'" data-id="'+esc(i.id)+'"'+((f.open||(f.oi&&f.oi.indexOf(i.id)>-1)||(f.openImp&&i.wichtig&&i.status!=="Erledigt"))?" open":"")+' style="--i:'+Math.min(n,8)+'"><summary><span class="c s'+SC(i.status)+'">'+(esc(i.status)||"&nbsp;")+'</span><span class="wi">'+(i.wichtig?"Wichtig":"")+'</span><span class="d">'+fd(i.datum)+'</span><b class="t">'+esc(i.titel)+'</b></summary><div class="bd">'+(i.details?'<p>'+esc(i.details)+'</p>':"")+(i.kontakt?'<p>Kontakt: '+esc(i.kontakt)+'</p>':"")+(!i.details&&!i.kontakt?'<p class="d">Keine weiteren Details.</p>':"")+(i.geaendert?'<p class="d">Zuletzt geändert: '+fd(i.geaendert)+'</p>':"")+(ed?'<div class="ed"><label class="f">Status<select class="es">'+sel.map(x=>'<option value="'+esc(x)+'"'+(x===i.status?" selected":"")+'>'+(esc(x)||"&nbsp;")+'</option>').join("")+'</select></label><label class="tg"><input type="checkbox" class="em"'+(i.mark?" checked":"")+'><span class="sw"></span>Markiert</label><label class="f">Meine Notiz<textarea class="nt" placeholder="Notiz eintragen">'+esc(i.notiz)+'</textarea></label></div><p class="np"></p>':(i.notiz?'<p>Notiz: '+esc(i.notiz)+'</p>':""))+'</div></details>'};
+return '<details class="it k'+SC(i.status)+(i.wichtig?" imp":"")+(i.mark?" mk":"")+'" data-id="'+esc(i.id)+'"'+((f.open||(f.oi&&f.oi.indexOf(i.id)>-1)||(f.openImp&&i.wichtig&&i.status!=="Erledigt"))?" open":"")+' style="--i:'+Math.min(n,8)+'"><summary><span class="c s'+SC(i.status)+'">'+(esc(i.status)||"&nbsp;")+'</span><span class="wi">'+(i.wichtig?"Wichtig":"")+'</span><span class="d">'+fd(i.datum)+'</span><b class="t">'+esc(i.titel)+'</b></summary><div class="bd">'+(i.details?'<p>'+fmt(i.details)+'</p>':"")+(i.kontakt?'<p>Kontakt: '+esc(i.kontakt)+'</p>':"")+(!i.details&&!i.kontakt?'<p class="d">Keine weiteren Details.</p>':"")+(i.geaendert?'<p class="d">Zuletzt geändert: '+fd(i.geaendert)+'</p>':"")+(ed?'<div class="ed"><label class="f">Status<select class="es">'+sel.map(x=>'<option value="'+esc(x)+'"'+(x===i.status?" selected":"")+'>'+(esc(x)||"&nbsp;")+'</option>').join("")+'</select></label><label class="tg"><input type="checkbox" class="em"'+(i.mark?" checked":"")+'><span class="sw"></span>Markiert</label><label class="f">Meine Notiz<textarea class="nt" placeholder="Notiz eintragen">'+esc(i.notiz)+'</textarea></label></div><p class="np"></p>':(i.notiz?'<p>Notiz: '+esc(i.notiz)+'</p>':""))+'</div></details>'};
 const v=D.items.filter(i=>(!f.fw||i.wichtig)&&(!f.fm||i.mark)&&(!f.q||f.q==="alle"||(f.q==="w"?i.wichtig&&i.status!=="Erledigt":f.q==="m"?i.mark:i.status===f.q))&&(!f.fe||i.status!=="Erledigt")&&(!f.fs||f.fs==="all"||(f.fs==="none"?!i.status:i.status===f.fs))&&(!f.von||i.datum>=f.von)&&(!f.bis||i.datum<=f.bis)&&(!t||[i.titel,i.details,i.kontakt,i.notiz,fd(i.datum),i.status].join(" ").toLowerCase().includes(t))).sort(rk);
 const act=v.filter(i=>i.status!=="Erledigt"),imp=act.filter(i=>i.wichtig),inf=act.filter(i=>!i.wichtig&&(i.status==="Info"||!i.status)),rest=act.filter(i=>!i.wichtig&&i.status!=="Info"&&i.status),done=v.filter(i=>i.status==="Erledigt");
 const sec=(h,a)=>a.length?"<h2>"+h+"</h2>"+a.map(card).join(""):"";
 const body=!v.length?'<p class="empty">'+(D.items.length?"Keine Einträge gefunden.":"Keine Einträge vorhanden.")+'</p>':so==="st"?sec("Das Wichtigste",imp)+sec("Offen und in Klärung",rest)+sec("Zur Information",inf)+sec("Erledigt",done):sec(so==="alt"?"Chronologisch, älteste zuerst":"Chronologisch, neueste zuerst",v);
 return{head:head,kb:kb,sum:sum,foot:esc(D.meta.br||""),tt:esc(D.meta.tt||"Rückkehr-Übersicht"),cn:v.length+" von "+D.items.length+" Einträgen",list:body}}
 function viewer(D){
-const $=s=>document.querySelector(s);let open=true,q="w",LK="rkb-"+(D.stamp||0);const td=()=>{const t=new Date();return new Date(t-t.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
-try{const m=JSON.parse(localStorage.getItem(LK)||"{}");D.items.forEach(i=>{const x=m[i.id];if(x){i.status=x.s;i.notiz=x.n;i.mark=x.m;if(x.g)i.geaendert=x.g}})}catch(e){}
-const keep=()=>{try{const m={};D.items.forEach(i=>m[i.id]={s:i.status,n:i.notiz||"",m:!!i.mark,g:i.geaendert||""});localStorage.setItem(LK,JSON.stringify(m))}catch(e){}};
+const $=s=>document.querySelector(s);let open=true,q="w",LK="rkb-"+(D.stamp||0);const TT=()=>D.meta.tt||"Rückkehr-Übersicht",fn=t=>(t||"").replace(/[äÄöÖüÜß]/g,c=>({"ä":"ae","Ä":"Ae","ö":"oe","Ö":"Oe","ü":"ue","Ü":"Ue","ß":"ss"})[c]).replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||"Bericht",setT=()=>{$("h1").textContent=TT();document.title=TT()};const td=()=>{const t=new Date();return new Date(t-t.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+try{const m=JSON.parse(localStorage.getItem(LK)||"{}");D.items.forEach(i=>{const x=m[i.id];if(x){i.status=x.s;i.notiz=x.n;i.mark=x.m;if(x.g)i.geaendert=x.g}});if(m._t)D.meta.tt=m._t}catch(e){}
+const keep=()=>{try{const m={};D.items.forEach(i=>m[i.id]={s:i.status,n:i.notiz||"",m:!!i.mark,g:i.geaendert||""});m._t=D.meta.tt||"";localStorage.setItem(LK,JSON.stringify(m))}catch(e){}};
 const TB=[["w","Wichtig"],["Offen","Offen"],["In Klärung","In Klärung"],["Info","Info"],["Erledigt","Erledigt"],["m","Markiert"],["alle","Alle"]];
 function tabs(){const c=k=>k==="alle"?D.items.length:k==="w"?D.items.filter(i=>i.wichtig&&i.status!=="Erledigt").length:k==="m"?D.items.filter(i=>i.mark).length:D.items.filter(i=>i.status===k).length;
 $("#tb").innerHTML=TB.map(t=>'<button data-q="'+t[0]+'" aria-pressed="'+(q===t[0])+'">'+t[1]+'<span>'+c(t[0])+'</span></button>').join("")}
@@ -301,18 +322,27 @@ $("#ex").onclick=()=>{open=!open;document.querySelectorAll("#ls details").forEac
 $("#rs").onclick=()=>{$("#q").value="";$("#fw").checked=$("#fe").checked=$("#fm").checked=false;$("#fs").value="all";$("#so").value="st";$("#dv").value=$("#db").value="";open=true;q="w";draw()};
 $("#pp").onclick=()=>window.print();
 $("#ph").onclick=async()=>{D.stamp=Date.now();LK="rkb-"+D.stamp;keep();$("#dj").textContent=JSON.stringify(D).replace(/</g,"\\u003c");
-const n="Rueckkehr-Uebersicht-bearbeitet-"+new Date().toISOString().slice(0,10)+".html",f=new File(["<!DOCTYPE html>\n"+document.documentElement.outerHTML],n,{type:"text/html"});
-try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:n});return}}catch(e){if(e.name==="AbortError")return}
+const n=fn(TT())+"-bearbeitet-"+td()+".html",f=new File(["<!DOCTYPE html>\n"+document.documentElement.outerHTML],n,{type:"text/html"});
+try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:TT()});return}}catch(e){if(e.name==="AbortError")return}
 const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
-window.onbeforeprint=()=>{draw(1);document.documentElement.dataset.theme="light";document.querySelectorAll("details").forEach(d=>d.open=true);document.querySelectorAll("textarea.nt").forEach(t=>{const p=t.closest(".bd").querySelector(".np");if(p)p.textContent=t.value?"Notiz: "+t.value:""})};
-window.onafterprint=()=>{draw();document.documentElement.dataset.theme=$("#th").checked?"dark":"light"};
+window.onbeforeprint=()=>{document.title=TT()+" "+td();draw(1);document.documentElement.dataset.theme="light";document.querySelectorAll("details").forEach(d=>d.open=true);document.querySelectorAll("textarea.nt").forEach(t=>{const p=t.closest(".bd").querySelector(".np");if(p)p.textContent=t.value?"Notiz: "+t.value:""})};
+window.onafterprint=()=>{document.title=TT();draw();document.documentElement.dataset.theme=$("#th").checked?"dark":"light"};
+$("#rt").value=TT();setT();$("#rt").oninput=e=>{D.meta.tt=e.target.value.trim();setT();keep()};
 draw();
 }
 function ivDoc(ia){const P={meta:S.meta,items:pub()},r=ivHtml(P,{fs:"all",openImp:!ia}),D=JSON.stringify({meta:P.meta,items:P.items,stamp:Date.now()}).replace(/</g,"\\u003c");
 return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${r.tt}</title><style>${IVCSS}</style></head><body>${ivBody(r,ia)}`+(ia?`<script type="application/json" id="dj">${D}<\/script><script>document.documentElement.className="js";const ivHtml=${ivHtml.toString()};(${viewer.toString()})(JSON.parse(document.getElementById("dj").textContent))<\/script>`:"")+`</body></html>`}
-$("#bh").onclick=()=>out(`Rueckkehr-Uebersicht-statisch-${today()}.html`,ivDoc(false),"text/html");
-$("#bi").onclick=()=>out(`Rueckkehr-Uebersicht-interaktiv-${today()}.html`,ivDoc(true),"text/html");
-$("#bp").onclick=()=>out(`Rueckkehr-Uebersicht-${today()}.pdf`,pdf(),"application/pdf");
+const fnm=t=>(t||"").replace(/[äÄöÖüÜß]/g,c=>({"ä":"ae","Ä":"Ae","ö":"oe","Ö":"Oe","ü":"ue","Ü":"Ue","ß":"ss"})[c]).replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||"Rueckkehr-Uebersicht";
+let OF=null,fnEdit=false;
+const OT={h:["-statisch","html","text/html"],i:["-interaktiv","html","text/html"],p:["","pdf","application/pdf"]};
+function oName(){if(!fnEdit)$("#on").value=fnm($("#ot").value)+OT[OF][0]+"-"+today()}
+function oOpen(k){OF=k;fnEdit=false;$("#ot").value=S.meta.tt||"";oName();const b=S.meta.bk;
+$("#om").textContent="Der Titel erscheint im Bericht, die Datei erhält automatisch diesen Namen. Danach öffnet sich das Teilen-Menü (z. B. für E-Mail)."+(!b||(Date.now()-new Date(b))/864e5>7?" Hinweis: Dein letztes Backup ist älter als 7 Tage.":"");$("#odlg").showModal()}
+$("#ot").oninput=oName;$("#on").oninput=()=>{fnEdit=true};
+$("#oc").onclick=()=>$("#odlg").close();
+$("#oo").onclick=async()=>{const k=OF,t=$("#ot").value.trim(),n=fnm($("#on").value)+"."+OT[k][1];S.meta.tt=t;save();fill();$("#odlg").close();
+await out(n,k==="p"?pdf():ivDoc(k==="i"),OT[k][2],t||"Rückkehr-Übersicht")};
+$("#bh").onclick=()=>oOpen("h");$("#bi").onclick=()=>oOpen("i");$("#bp").onclick=()=>oOpen("p");
 $("#bm").onclick=async e=>{const t=rep().md,b=e.target;try{await navigator.clipboard.writeText(t)}catch(x){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(y){}a.remove()}
 b.textContent="Kopiert";setTimeout(()=>b.textContent="Als Markdown kopieren",1600)};
 $("#bb").onclick=async()=>{await out(`Rueckkehr-Backup-${today()}.json`,JSON.stringify(S,null,1),"application/json");S.meta.bk=today();save();render()};
@@ -321,6 +351,7 @@ $("#imp").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)r
 try{const j=JSON.parse(await f.text());if(!Array.isArray(j.items))throw 0;
 if(!confirm(`Aktuelle Liste durch das Backup ersetzen (${j.items.length} Einträge)?`))return;
 S={meta:Object.assign({zt:"",vt:"",ei:"",ko:"",br:"",so:"st",bk:""},j.meta),items:j.items};save();fill();render()}catch(x){alert("Diese Datei ist kein gültiges Backup.")}};
+$("#fb").onclick=e=>{const b=e.target.closest("button");if(!b)return;const t=$("#de"),m=b.dataset.m,a=t.selectionStart,z=t.selectionEnd,v=t.value;t.value=v.slice(0,a)+m+v.slice(a,z)+m+v.slice(z);t.focus();t.setSelectionRange(a+m.length,z+m.length)};
 $("#bn").onclick=()=>$("#imh").click();
 $("#imh").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
 try{const j=JSON.parse(new DOMParser().parseFromString(await f.text(),"text/html").getElementById("dj").textContent);
